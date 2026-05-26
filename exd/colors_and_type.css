@@ -1,0 +1,219 @@
+/* ─────────────────────────────────────────────────────────────
+   .exd Design System — Colors & Type tokens
+   Source of truth for all .exd-branded surfaces.
+   Mirrors the live site (git-exd/exd-website).
+   ───────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Zalando Sans';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('fonts/ZalandoSans-Light.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Zalando Sans';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('fonts/ZalandoSans-SemiExpandedBold.woff2') format('woff2');
+}
+
+/* Instrument Serif (italic) is loaded via Google Fonts:
+   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap" rel="stylesheet"> */
+
+:root {
+  /* ── BASE COLORS ─────────────────────────────────────────── */
+  --exd-bone:        #f5f4ef;   /* page bg, light surfaces */
+  --exd-bone-warm:   #f0eeea;   /* card bg on light pages */
+  --exd-ink:         #0d0f1e;   /* deep navy/black, dark surfaces */
+  --exd-ink-deep:    #0b0a1f;   /* footer / very dark */
+  --exd-ink-darker:  #080717;   /* article footer */
+  --exd-navy:        #19224c;   /* logo wordmark navy */
+  --exd-text:        #1a1a1a;   /* body copy on light bg */
+  --exd-accent:      #f62667;   /* signature pink-red (logo "d") */
+  --exd-accent-alt:  #e9193e;   /* hot red used in flow diagrams / dots */
+  --exd-teal:        #6eada3;   /* logo dot · also "Strategy" tag */
+  --exd-accent-soft: #f9a8d4;   /* used in orb gradients (pink) */
+
+  /* Insight tag colors (used as accents in dark UI) */
+  --exd-tag-ai:        #b39dfc;  /* lavender */
+  --exd-tag-strategy:  #6eada3;  /* teal */
+  --exd-tag-design:    #f9a8d4;  /* pink */
+
+  /* Neutral text scale on LIGHT bg */
+  --exd-fg-1:        #0d0f1e;   /* primary ink */
+  --exd-fg-2:        #333333;   /* body */
+  --exd-fg-3:        #555555;   /* secondary */
+  --exd-fg-4:        #666666;   /* tertiary / labels */
+  --exd-fg-5:        #999999;   /* muted */
+  --exd-fg-6:        #bbbbbb;   /* disabled */
+
+  /* Neutral text scale on DARK bg (white at varying alpha) */
+  --exd-on-dark-1:   rgba(255,255,255,1.00);
+  --exd-on-dark-2:   rgba(255,255,255,0.80);
+  --exd-on-dark-3:   rgba(255,255,255,0.65);
+  --exd-on-dark-4:   rgba(255,255,255,0.45);
+  --exd-on-dark-5:   rgba(255,255,255,0.30);
+  --exd-on-dark-6:   rgba(255,255,255,0.15);  /* hairlines */
+  --exd-on-dark-7:   rgba(255,255,255,0.08);  /* subtle border */
+
+  /* Surface tints on dark */
+  --exd-glass:       rgba(255,255,255,0.07);
+  --exd-glass-hi:    rgba(255,255,255,0.18);  /* nav glass */
+  --exd-glass-bd:    rgba(255,255,255,0.45);  /* nav glass border */
+
+  /* Accent tints */
+  --exd-accent-06:   rgba(233,25,62,0.06);
+  --exd-accent-22:   rgba(233,25,62,0.22);
+  --exd-accent-30:   rgba(233,25,62,0.30);
+  --exd-accent-40:   rgba(233,25,62,0.40);
+  --exd-accent-55:   rgba(233,25,62,0.55);
+
+  /* Hero orb (signature gradient) */
+  --exd-orb: radial-gradient(circle at 36% 34%,
+    #1e1b5e 0%,
+    #3b2080 18%,
+    #6b1f7a 36%,
+    #b52050 56%,
+    #e9193e 70%,
+    rgba(233,25,62,0) 100%);
+
+  /* ── TYPOGRAPHY ──────────────────────────────────────────── */
+  --exd-sans:  'Zalando Sans', 'Inter', system-ui, sans-serif;
+  --exd-serif: 'Instrument Serif', Georgia, serif;
+
+  /* Weights actually shipped */
+  --exd-w-light: 300;   /* body default */
+  --exd-w-reg:   400;   /* nav links */
+  --exd-w-med:   500;   /* labels, CTAs */
+  --exd-w-semi:  600;   /* emphasis on dark */
+  --exd-w-bold:  700;   /* headlines (sans semi-expanded) */
+
+  /* Base sizes (clamps follow the live site) */
+  --exd-h1:      clamp(32px, 5.2vw, 76px);   /* hero */
+  --exd-h2:      clamp(28px, 3.2vw, 44px);   /* section title */
+  --exd-h2-lg:   clamp(32px, 4vw, 56px);     /* capabilities headline */
+  --exd-h3:      20px;                       /* card title */
+  --exd-body-lg: 17px;                       /* about/why prose */
+  --exd-body:    15px;                       /* default UI */
+  --exd-body-sm: 14px;
+  --exd-caption: 13px;
+  --exd-eyebrow: 13px;                       /* uppercase tag */
+  --exd-micro:   11px;
+
+  /* Semantic line-heights */
+  --exd-lh-tight:    1.04;   /* hero */
+  --exd-lh-headline: 1.1;
+  --exd-lh-body:     1.65;
+  --exd-lh-prose:    1.78;
+
+  /* Tracking */
+  --exd-track-eyebrow: 0.08em;
+  --exd-track-meta:    0.06em;
+
+  /* ── RADII / SHADOWS / MOTION ────────────────────────────── */
+  --exd-r-pill:   100px;   /* nav, buttons, pills, tags */
+  --exd-r-card:   28px;    /* big dark cards (build, contact) */
+  --exd-r-img:    20px;    /* case-study cards, hero img */
+  --exd-r-card-sm:18px;    /* insight cards */
+  --exd-r-input:  12px;    /* contact form */
+  --exd-r-input-sm: 8px;   /* newsletter */
+
+  --exd-shadow-glass: 0 4px 24px rgba(0,0,0,0.10),
+                      inset 0 1px 0 rgba(255,255,255,0.6);
+  --exd-shadow-glass-dark: 0 4px 24px rgba(0,0,0,0.18),
+                           inset 0 1px 0 rgba(255,255,255,0.4);
+
+  --exd-ease:      cubic-bezier(0.4, 0, 0.2, 1);
+  --exd-ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --exd-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --exd-dur-fast:  0.2s;
+  --exd-dur-med:   0.45s;
+  --exd-dur-slow:  0.75s;
+
+  /* ── SPACING ─────────────────────────────────────────────── */
+  --exd-sp-1:  4px;
+  --exd-sp-2:  8px;
+  --exd-sp-3:  12px;
+  --exd-sp-4:  16px;
+  --exd-sp-5:  24px;
+  --exd-sp-6:  32px;
+  --exd-sp-7:  44px;
+  --exd-sp-8:  64px;
+  --exd-sp-9:  80px;
+  --exd-sp-10: 100px;
+
+  /* Containers */
+  --exd-container:    1200px;
+  --exd-container-lg: 1280px;
+  --exd-container-narrow: 1100px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SEMANTIC ELEMENT STYLES
+   Apply a class or wrap your section in .exd-scope to opt in.
+   ───────────────────────────────────────────────────────────── */
+
+.exd-scope, .exd-body {
+  font-family: var(--exd-sans);
+  font-weight: var(--exd-w-light);
+  color: var(--exd-text);
+  background: var(--exd-bone);
+  -webkit-font-smoothing: antialiased;
+}
+
+.exd-scope.exd-dark { background: var(--exd-ink); color: white; }
+
+/* Headlines mix sans-bold + instrument-serif italic */
+.exd-h1 {
+  font-family: var(--exd-sans);
+  font-weight: var(--exd-w-bold);
+  font-size: var(--exd-h1);
+  line-height: var(--exd-lh-tight);
+}
+.exd-h2 {
+  font-family: var(--exd-sans);
+  font-weight: var(--exd-w-bold);
+  font-size: var(--exd-h2);
+  line-height: var(--exd-lh-headline);
+}
+.exd-h2-large {
+  font-family: var(--exd-sans);
+  font-weight: var(--exd-w-bold);
+  font-size: var(--exd-h2-lg);
+  line-height: var(--exd-lh-headline);
+}
+.exd-h3 {
+  font-family: var(--exd-sans);
+  font-weight: var(--exd-w-bold);
+  font-size: var(--exd-h3);
+  line-height: 1.25;
+}
+.exd-serif-italic {
+  font-family: var(--exd-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+.exd-eyebrow {
+  font-size: var(--exd-eyebrow);
+  font-weight: var(--exd-w-med);
+  letter-spacing: var(--exd-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--exd-accent);
+}
+.exd-body-lg {
+  font-size: var(--exd-body-lg);
+  font-weight: var(--exd-w-light);
+  line-height: var(--exd-lh-prose);
+}
+.exd-caption {
+  font-size: var(--exd-caption);
+  color: var(--exd-fg-5);
+}
+.exd-meta {
+  font-size: var(--exd-micro);
+  letter-spacing: var(--exd-track-meta);
+  text-transform: uppercase;
+  color: var(--exd-fg-5);
+}

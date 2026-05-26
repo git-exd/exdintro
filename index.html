@@ -1,0 +1,1993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Intro .exd</title>
+<link rel="stylesheet" href="exd/colors_and_type.css" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --t-display: 128px;
+    --t-title:   84px;
+    --t-h2:      64px;
+    --t-h3:      44px;
+    --t-body:    34px;
+    --t-small:   28px;
+    --t-eyebrow: 26px;
+    --t-meta:    24px;
+
+    --pad-x:    120px;
+    --pad-y:    96px;
+    --gap-title: 56px;
+    --gap-item:  32px;
+  }
+
+  html, body { margin:0; padding:0; background:#000; }
+  body { font-family: var(--exd-sans); font-weight: 300; color: var(--exd-text); }
+
+  deck-stage { display:block; }
+  deck-stage section {
+    box-sizing: border-box;
+    background: var(--exd-bone);
+    color: var(--exd-fg-1);
+    padding: var(--pad-y) var(--pad-x);
+    overflow: hidden;
+    position: relative;
+  }
+  .eyebrow {
+    font-size: var(--t-eyebrow);
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--exd-accent-alt);
+    margin: 0;
+  }
+  .h-title {
+    font-family: var(--exd-sans);
+    font-weight: 700;
+    font-size: var(--t-title);
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--exd-fg-1);
+  }
+  .h-display {
+    font-family: var(--exd-sans);
+    font-weight: 700;
+    font-size: var(--t-display);
+    line-height: 0.96;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .h-h2 {
+    font-family: var(--exd-sans);
+    font-weight: 700;
+    font-size: var(--t-h2);
+    line-height: 1.06;
+    margin: 0;
+  }
+  .h-h3 {
+    font-family: var(--exd-sans);
+    font-weight: 700;
+    font-size: var(--t-h3);
+    line-height: 1.15;
+    margin: 0;
+  }
+  .serif { font-family: var(--exd-serif); font-style: italic; font-weight: 400; }
+  .body  { font-size: var(--t-body); line-height: 1.5; font-weight: 300; color: var(--exd-fg-2); }
+  .body-on-dark { color: rgba(255,255,255,0.78); }
+  .small { font-size: var(--t-small); line-height: 1.55; font-weight: 300; color: var(--exd-fg-3); }
+  .meta  { font-size: var(--t-meta); letter-spacing: 0.08em; text-transform: uppercase; color: var(--exd-fg-5); font-weight: 500; }
+
+  .dark { background: var(--exd-ink); color: #fff; }
+  .dark .h-title, .dark .h-display, .dark .h-h2, .dark .h-h3 { color:#fff; }
+  .dark .body { color: rgba(255,255,255,0.78); }
+  .dark .small { color: rgba(255,255,255,0.65); }
+  .dark .meta { color: rgba(255,255,255,0.45); }
+
+  .chrome {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .chrome .mark {
+    position: absolute;
+    top: 36px;
+    left: 64px;
+    height: 32px;
+  }
+  .chrome .pgno {
+    position: absolute;
+    bottom: 36px;
+    right: 64px;
+    font-size: 24px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--exd-fg-5);
+    font-weight: 500;
+  }
+  .dark .chrome .pgno { color: rgba(255,255,255,0.45); }
+
+  .frame { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+
+  .pill {
+    display:inline-flex; align-items:center; gap:14px;
+    padding: 14px 26px;
+    border-radius: 100px;
+    font-size: var(--t-small);
+    font-weight: 500;
+    border: 1.5px solid currentColor;
+  }
+  .pill.accent { color: var(--exd-accent-alt); border-color: var(--exd-accent-alt); }
+  .pill.dark   { background: var(--exd-ink); color:#fff; border-color: var(--exd-ink); }
+  .pill.dot::before {
+    content:""; width:10px; height:10px; border-radius:50%;
+    background: currentColor; display:inline-block;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--exd-orb);
+    filter: blur(72px);
+    pointer-events: none;
+    opacity: 0.95;
+  }
+
+  /* Cover */
+  .s-cover { background: var(--exd-ink); color:#fff; padding-left: 64px; padding-right: 64px; }
+  /* Three drifting orb pieces that align/disalign over time.
+     `isolation: isolate` is essential — without it the per-piece stacking
+     contexts (created by `filter: blur`) break mix-blend-mode and only the
+     topmost piece is visible. */
+  .s-cover .orb-stack {
+    position: absolute;
+    width: 1400px; height: 1400px;
+    right: -340px; top: -360px;
+    pointer-events: none;
+    z-index: 1;
+    isolation: isolate;
+  }
+  .s-cover .orb-piece {
+    position: absolute;
+    width: 760px; height: 760px;
+    top: 320px; left: 320px;
+    border-radius: 50%;
+    filter: blur(56px);
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+  .s-cover .orb-piece.p1 {
+    background: radial-gradient(circle at 50% 50%, #e9193e 0%, rgba(233,25,62,0.6) 38%, transparent 70%);
+    animation: cover-orb-1 9s ease-in-out infinite;
+  }
+  .s-cover .orb-piece.p2 {
+    background: radial-gradient(circle at 50% 50%, #8e2aa3 0%, rgba(107,31,122,0.65) 38%, transparent 72%);
+    animation: cover-orb-2 11s ease-in-out infinite;
+  }
+  .s-cover .orb-piece.p3 {
+    background: radial-gradient(circle at 50% 50%, #3a3aa8 0%, rgba(30,27,158,0.65) 38%, transparent 72%);
+    animation: cover-orb-3 13s ease-in-out infinite;
+  }
+  @keyframes cover-orb-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%     { transform: translate(220px, -180px) scale(1.35); }
+    50%     { transform: translate(120px, 240px) scale(0.7); }
+    75%     { transform: translate(-180px, -80px) scale(1.15); }
+  }
+  @keyframes cover-orb-2 {
+    0%, 100% { transform: translate(0, 0) scale(1.05); }
+    30%     { transform: translate(-240px, 160px) scale(0.65); }
+    60%     { transform: translate(200px, -200px) scale(1.4); }
+  }
+  @keyframes cover-orb-3 {
+    0%, 100% { transform: translate(0, 0) scale(0.95); }
+    35%     { transform: translate(180px, 240px) scale(1.45); }
+    70%     { transform: translate(-220px, -160px) scale(0.75); }
+  }
+  .s-cover .frame {
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+  }
+  .s-cover .stack {
+    position: relative; z-index: 2;
+    margin-top: auto; max-width: 1400px;
+  }
+  .s-cover .h-display { font-size: 168px; line-height: 0.94; grid-row: 2; position: relative; z-index: 2; }
+  .s-cover .lede {
+    margin-top: 48px;
+    font-size: 38px; line-height: 1.45;
+    color: rgba(255,255,255,0.72);
+    max-width: 1200px;
+    font-weight: 300;
+  }
+  .s-cover .meta-row,
+  .s-cover .meta-right {
+    position: absolute;
+    bottom: 36px;
+    z-index: 3;
+  }
+  .s-cover .meta-row { left: 64px; }
+  .s-cover .meta-right { right: 64px; }
+  .s-cover .meta-row span,
+  .s-cover .meta-right span {
+    font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(255,255,255,0.45); font-weight: 500;
+  }
+  .s-cover .top-row {
+    position: absolute; top: 36px; left: 64px; right: 64px;
+    display:flex; justify-content: space-between; align-items: center;
+    z-index: 3;
+  }
+  .s-cover .top-row img { height: 32px; }
+  .s-cover .top-row .ref { font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 500; }
+
+  /* Raspberry mesh background — layered radial gradients on a deep base.
+     The two corner ellipses (raspberry and violet) live on ::before / ::after
+     so they can each pulse independently (different periods → non-rhythmic).
+     The center purple glow + base gradient stay in the section's background. */
+  .bg-raspberry {
+    position: relative;
+    background: radial-gradient(ellipse 110% 110% at 50% 50%,
+      #050612 0%,
+      #0c0d1d 55%,
+      #181122 100%);
+    color: #fff;
+  }
+  .bg-raspberry::before,
+  .bg-raspberry::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    will-change: opacity;
+  }
+  .bg-raspberry::before {
+    background: radial-gradient(ellipse 130% 120% at 108% -8%,
+      rgba(233,25,62,0.42) 0%,
+      rgba(233,25,62,0.34) 18%,
+      rgba(233,25,62,0.21) 38%,
+      rgba(233,25,62,0.09) 62%,
+      transparent 88%);
+    animation: bg-drift-a 19s ease-in-out infinite, bg-pulse-a 17s ease-in-out infinite;
+  }
+  .bg-raspberry::after {
+    background: radial-gradient(ellipse 130% 125% at -8% 108%,
+      rgba(122,60,210,0.42) 0%,
+      rgba(89,46,178,0.34) 20%,
+      rgba(58,33,128,0.21) 42%,
+      rgba(30,27,94,0.09) 65%,
+      transparent 90%);
+    animation: bg-drift-b 23s ease-in-out infinite, bg-pulse-b 21s ease-in-out infinite;
+  }
+  /* Base scale(1.5) gives enough margin (240px horizontal, 135px vertical)
+     for the translate amplitudes below, so the pseudo-element never reveals
+     the bare section corner. */
+  @keyframes bg-drift-a {
+    0%, 100% { transform: scale(1.5) translate(0, 0); }
+    20%      { transform: scale(1.5) translate(-110px, 70px); }
+    45%      { transform: scale(1.5) translate(140px, 40px); }
+    65%      { transform: scale(1.5) translate(-90px, -65px); }
+    85%      { transform: scale(1.5) translate(100px, 80px); }
+  }
+  @keyframes bg-drift-b {
+    0%, 100% { transform: scale(1.5) translate(0, 0); }
+    25%      { transform: scale(1.5) translate(120px, -55px); }
+    50%      { transform: scale(1.5) translate(-100px, -75px); }
+    75%      { transform: scale(1.5) translate(110px, 60px); }
+  }
+  @keyframes bg-pulse-a {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+  @keyframes bg-pulse-b {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+
+  /* Section divider */
+  .s-section { background: var(--exd-ink); color:#fff; display:flex; align-items: center; }
+  .s-section .orb {
+    width: 900px; height: 900px;
+    left: -200px; bottom: -300px;
+    opacity: 0.85;
+  }
+  /* Animated 3-piece orb for chapter dividers — same technique as the cover.
+     Positioned bottom-left to match the original static orb. */
+  .s-section .orb-stack {
+    position: absolute;
+    width: 1200px; height: 1200px;
+    left: -300px; bottom: -380px;
+    pointer-events: none;
+    z-index: 1;
+    isolation: isolate;
+  }
+  .s-section .orb-piece {
+    position: absolute;
+    width: 700px; height: 700px;
+    top: 250px; left: 250px;
+    border-radius: 50%;
+    filter: blur(56px);
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+  .s-section .orb-piece.p1 {
+    background: radial-gradient(circle at 50% 50%, #e9193e 0%, rgba(233,25,62,0.6) 38%, transparent 70%);
+    animation: section-orb-1 9s ease-in-out infinite;
+  }
+  .s-section .orb-piece.p2 {
+    background: radial-gradient(circle at 50% 50%, #8e2aa3 0%, rgba(107,31,122,0.65) 38%, transparent 72%);
+    animation: section-orb-2 11s ease-in-out infinite;
+  }
+  .s-section .orb-piece.p3 {
+    background: radial-gradient(circle at 50% 50%, #3a3aa8 0%, rgba(30,27,158,0.65) 38%, transparent 72%);
+    animation: section-orb-3 13s ease-in-out infinite;
+  }
+  @keyframes section-orb-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%     { transform: translate(180px, -160px) scale(1.3); }
+    50%     { transform: translate(100px, 200px) scale(0.75); }
+    75%     { transform: translate(-150px, -60px) scale(1.1); }
+  }
+  @keyframes section-orb-2 {
+    0%, 100% { transform: translate(0, 0) scale(1.05); }
+    30%     { transform: translate(-200px, 130px) scale(0.7); }
+    60%     { transform: translate(170px, -170px) scale(1.35); }
+  }
+  @keyframes section-orb-3 {
+    0%, 100% { transform: translate(0, 0) scale(0.95); }
+    35%     { transform: translate(150px, 200px) scale(1.4); }
+    70%     { transform: translate(-180px, -130px) scale(0.75); }
+  }
+  .s-section .num {
+    font-family: var(--exd-serif);
+    font-style: italic;
+    font-size: 280px;
+    line-height: 1;
+    color: var(--exd-accent-alt);
+  }
+  .s-section .right { display:flex; flex-direction: column; gap: 48px; max-width: 1000px; }
+  .s-section .h-display { font-size: 140px; }
+  .s-section .row { display: grid; grid-template-columns: 360px 1fr; gap: 80px; align-items: center; position: relative; z-index:2; width: 100%; }
+
+  /* Agenda */
+  .s-agenda .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px 120px; margin-top: 80px; }
+  .s-agenda .item { display: grid; grid-template-columns: 80px 1fr; gap: 32px; align-items: baseline; }
+  .s-agenda .num { font-family: var(--exd-serif); font-style: italic; font-size: 72px; color: var(--exd-accent-alt); line-height: 1; display: block; }
+  .s-agenda .label { font-size: 44px; font-weight: 700; line-height: 1.1; display: block; }
+  .s-agenda .desc  { font-size: 26px; color: var(--exd-fg-3); line-height: 1.5; margin-top: 12px; font-weight: 300; display: block; }
+
+  /* Statement */
+  .s-statement { background: var(--exd-bone); display: flex; align-items: center; }
+  .s-statement .stack { max-width: 1600px; }
+  .s-statement .h-display { font-size: 132px; }
+
+  /* Statement slides — staggered reveal of the two sentences.
+     Animation is gated by [data-deck-active] so it re-plays each time the
+     viewer navigates back to the slide. */
+  section.s-statement .reveal { opacity: 0; display: block; }
+  section.s-statement .reveal.r2 { margin-top: 36px; }
+  section.s-statement[data-deck-active] .reveal {
+    animation: stmt-reveal 0.9s ease-out forwards;
+  }
+  section.s-statement[data-deck-active] .reveal.r2 {
+    animation-delay: 0.5s;
+  }
+  @keyframes stmt-reveal {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Slide 08 — Framework: left block fades in first, then the three right
+     items stagger in. Gated by [data-deck-active] so the reveal re-plays
+     each visit. */
+  section[data-label="04 Pillars"] .fr-left,
+  section[data-label="04 Pillars"] .fr-item {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  section[data-label="04 Pillars"][data-deck-active] .fr-left {
+    animation: fr-reveal 0.7s ease-out forwards;
+  }
+  section[data-label="04 Pillars"][data-deck-active] .fr-item {
+    animation: fr-reveal 0.6s ease-out forwards;
+    animation-delay: calc(0.6s + var(--i, 0) * 0.2s);
+  }
+  @keyframes fr-reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Two columns */
+  .s-twocol .body-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 120px; margin-top: 80px; }
+  .s-twocol .col h3 { font-size: 40px; font-weight: 700; margin: 0 0 24px; }
+  .s-twocol .col p  { font-size: 28px; line-height: 1.6; color: var(--exd-fg-2); font-weight: 300; margin: 0 0 20px; }
+  .s-twocol .col .accent-line { width: 80px; height: 4px; background: var(--exd-accent-alt); margin-bottom: 32px; }
+
+  /* Case study (short) */
+  .s-case .h-title { font-size: 64px; line-height: 1.05; }
+  .s-case .case-row {
+    display: grid;
+    grid-template-columns: 0.85fr 1.65fr;
+    gap: 56px;
+    align-items: stretch;
+    min-height: 800px;
+  }
+  .s-case .case-info {
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .s-case .case-info .h-title { margin-top: 4px; }
+  .s-case .case-info .body {
+    font-size: 22px; line-height: 1.55;
+    color: var(--exd-fg-3); font-weight: 300;
+    margin: 0; max-width: 480px;
+  }
+  .case-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: transparent; color: var(--exd-fg-1);
+    border: 1.5px solid var(--exd-fg-1);
+    padding: 18px 26px;
+    border-radius: 100px;
+    font-size: 20px; font-weight: 500;
+    text-decoration: none; width: fit-content;
+  }
+  .s-case .case-cta { margin-top: auto; }
+  .s-image .case-cta { color: #fff; border-color: #fff; margin-top: 32px; }
+  .s-case .case-images.count-3 {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 18px;
+    height: 100%;
+  }
+  .s-case .case-images.count-3 .case-img:nth-child(1) { grid-row: 1 / 3; }
+  .s-case .case-images.count-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    height: 100%;
+  }
+  .s-case .case-img {
+    background: var(--exd-bone-warm);
+    border-radius: 20px;
+    border: 1px solid rgba(13,15,30,0.06);
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* Our model (slide 17) */
+  .s-model .features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    margin-top: 80px;
+  }
+  .s-model .feature {
+    background: #fff;
+    border-radius: 28px;
+    padding: 48px 36px 52px;
+    border: 1px solid rgba(13,15,30,0.08);
+    display: flex; flex-direction: column; gap: 20px;
+    min-height: 400px;
+  }
+  .s-model .feature .num {
+    font-family: var(--exd-serif); font-style: italic;
+    font-size: 56px; color: var(--exd-accent-alt); line-height: 1;
+  }
+  .s-model .feature h3 { font-size: 36px; font-weight: 700; line-height: 1.1; margin: 0; }
+  .s-model .feature p  { font-size: 22px; line-height: 1.5; color: var(--exd-fg-3); margin: 0; font-weight: 300; }
+
+  /* Two ways in */
+  .s-twoways .frame { justify-content: center; }
+  .s-twoways .row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 56px; }
+  .s-twoways .col {
+    background: #fff;
+    border-radius: 28px;
+    padding: 48px 48px 52px;
+    border: 1px solid rgba(13,15,30,0.08);
+    display: flex; flex-direction: column; gap: 24px;
+    min-height: 380px;
+  }
+  .s-twoways .col .num {
+    font-family: var(--exd-serif); font-style: italic;
+    font-size: 72px; color: var(--exd-accent-alt); line-height: 1;
+  }
+  .s-twoways .col h3 { font-size: 56px; font-weight: 700; line-height: 1.1; margin: 0; }
+  .s-twoways .col p  { font-size: 26px; line-height: 1.55; color: var(--exd-fg-3); margin: 0; font-weight: 300; }
+
+  /* Slide 16 — staggered reveal: header first, then the two cards. */
+  .s-twoways .tw-header,
+  .s-twoways .tw-col {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  .s-twoways[data-deck-active] .tw-header {
+    animation: tw-reveal 0.7s ease-out forwards;
+  }
+  .s-twoways[data-deck-active] .tw-col {
+    animation: tw-reveal 0.6s ease-out forwards;
+    animation-delay: calc(0.6s + var(--i, 0) * 0.22s);
+  }
+  @keyframes tw-reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Slide 05 — Quantum leap: staged reveal at each click.
+     step 0: only eyebrow + title (vertically centered)
+     step 1: title rises, column 1 fades in
+     step 2: column 2 fades in
+     step 3: column 3 fades in
+     Driven by [data-step] on the section (set by the inline script below). */
+  .s-quantum .frame {
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .s-quantum .cols-wrap {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    transition: max-height 0.7s ease, opacity 0.45s ease, margin-top 0.45s ease;
+  }
+  .s-quantum[data-step="1"] .cols-wrap,
+  .s-quantum[data-step="2"] .cols-wrap,
+  .s-quantum[data-step="3"] .cols-wrap {
+    max-height: 900px;
+    opacity: 1;
+    margin-top: 56px;
+  }
+  .s-quantum .cols {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;
+  }
+  .s-quantum .col {
+    display: flex; flex-direction: column; gap: 20px;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .s-quantum[data-step="1"] .col-1,
+  .s-quantum[data-step="2"] .col-1,
+  .s-quantum[data-step="2"] .col-2,
+  .s-quantum[data-step="3"] .col-1,
+  .s-quantum[data-step="3"] .col-2,
+  .s-quantum[data-step="3"] .col-3 {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Three columns */
+  .s-three .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 80px; }
+  .s-three .card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 56px 48px 56px;
+    border: 1px solid rgba(13,15,30,0.06);
+    display: flex; flex-direction: column; gap: 28px;
+    height: 480px;
+  }
+  .s-three .card .num {
+    font-family: var(--exd-serif); font-style: italic;
+    font-size: 56px; color: var(--exd-accent-alt); line-height: 1;
+  }
+  .s-three .card h3 { font-size: 40px; font-weight: 700; line-height: 1.15; margin: 0; }
+  .s-three .card p  { font-size: 24px; line-height: 1.55; color: var(--exd-fg-3); font-weight: 300; margin: 0; }
+  .s-three .card .tag { margin-top: auto; align-self: flex-start; font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--exd-fg-4); font-weight: 500; }
+
+  /* Big number */
+  .s-bignum { background: var(--exd-bone); display:flex; align-items: center; }
+  .s-bignum .row { display:grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; width: 100%; }
+  .s-bignum .num {
+    font-family: var(--exd-sans); font-weight: 700;
+    font-size: 440px; line-height: 0.86;
+    color: var(--exd-fg-1);
+    letter-spacing: -0.04em;
+    position: relative;
+    display: block;
+  }
+  .s-bignum .num .pct { color: var(--exd-accent-alt); }
+  .s-bignum .eyebrow { display: block; margin-bottom: 32px; }
+  .s-bignum .right { padding-left: 40px; }
+  .s-bignum .h-h2 { margin-bottom: 28px; }
+  .s-bignum .body { max-width: 660px; }
+  .s-bignum .num { display: inline-block; }
+
+  /* Stat grid */
+  .s-statgrid { background: var(--exd-ink); color:#fff; }
+  .s-statgrid .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 80px; border-top: 1px solid rgba(255,255,255,0.12); }
+  .s-statgrid .stat {
+    padding: 48px 40px 48px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    border-right: 1px solid rgba(255,255,255,0.12);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .s-statgrid .stat:nth-child(4n) { border-right: 0; }
+  .s-statgrid .stat:nth-child(n+5) { padding-left: 40px; padding-right: 40px; }
+  .s-statgrid .stat:nth-child(4n+1) { padding-left: 0; }
+  .s-statgrid .stat .num { font-size: 96px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+  .s-statgrid .stat .num .accent { color: var(--exd-accent-alt); }
+  .s-statgrid .stat .label { font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 500; }
+  .s-statgrid .stat .desc { font-size: 24px; line-height: 1.5; color: rgba(255,255,255,0.78); margin-top: 8px; }
+
+  /* Process */
+  .s-process .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 100px; align-items: stretch; position: relative; }
+  .s-process .step {
+    background: #fff;
+    border: 1px solid rgba(13,15,30,0.08);
+    border-radius: 28px;
+    padding: 48px 40px;
+    display:flex; flex-direction: column; gap: 24px;
+    min-height: 420px;
+  }
+  .s-process .step .num { font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--exd-accent-alt); font-weight: 500; }
+  .s-process .step h3 { font-size: 36px; font-weight: 700; line-height: 1.15; margin: 0; }
+  .s-process .step p  { font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); margin: 0; font-weight: 300; }
+  .s-process .step .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--exd-accent-alt); margin-bottom: 8px; }
+
+  /* Comparison */
+  .s-compare .row { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 80px; }
+  .s-compare .col {
+    border-radius: 28px;
+    padding: 56px 56px 64px;
+    min-height: 580px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .s-compare .col.before { background: var(--exd-bone-warm); color: var(--exd-fg-2); }
+  .s-compare .col.after  { background: var(--exd-ink); color:#fff; }
+  .s-compare .col .label { font-size: 24px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; opacity: 0.55; }
+  .s-compare .col h3 { font-size: 56px; font-weight: 700; line-height: 1.05; margin: 0; }
+  .s-compare .col h3 .serif { font-style: italic; opacity: 0.6; font-weight: 400; }
+  .s-compare .col ul { list-style: none; margin: 16px 0 0; padding: 0; display:flex; flex-direction: column; gap: 18px; }
+  .s-compare .col li { font-size: 26px; line-height: 1.4; padding-left: 36px; position: relative; }
+  .s-compare .col.before li::before {
+    content:""; width: 16px; height: 1.5px; background: currentColor;
+    position: absolute; left: 0; top: 18px; opacity: 0.5;
+  }
+  .s-compare .col.after li::before {
+    content:"→"; position: absolute; left: 0; top: -2px; color: var(--exd-accent-alt); font-size: 28px;
+  }
+
+  /* Quote */
+  .s-quote { background: var(--exd-bone); display: flex; align-items: center; }
+  .s-quote .stack { max-width: 1500px; position: relative; padding-top: 120px; }
+  .s-quote .qmark {
+    font-family: var(--exd-serif); font-style: italic;
+    font-size: 240px; line-height: 0.6;
+    color: var(--exd-accent-alt);
+    display: block; margin-bottom: 32px;
+  }
+  .s-quote .q {
+    font-family: var(--exd-sans); font-weight: 700;
+    font-size: 80px; line-height: 1.12;
+    letter-spacing: -0.005em;
+    margin: 0;
+    position: relative; z-index: 1;
+  }
+  .s-quote .q .serif { color: var(--exd-fg-3); }
+  .s-quote .attrib {
+    margin-top: 64px; display: flex; align-items: center; gap: 28px;
+  }
+  .s-quote .avatar {
+    width: 80px; height: 80px; border-radius: 50%; background: var(--exd-fg-6);
+    background-size: cover; background-position: center;
+  }
+  .s-quote .who { font-size: 28px; font-weight: 700; }
+  .s-quote .who span { display: block; font-weight: 300; color: var(--exd-fg-3); margin-top: 4px; }
+
+  /* Image full-bleed */
+  .s-image { padding: 0; }
+  .s-image .bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+  .s-image .scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(13,15,30,0) 15%, rgba(13,15,30,0.5) 45%, rgba(13,15,30,0.95) 95%);
+  }
+  .s-image .content {
+    position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 96px;
+    color: #fff; max-width: 1700px;
+  }
+  .s-image .h-title { color: #fff; font-size: 96px; line-height: 1.04; }
+  .s-image .lede { margin-top: 24px; font-size: 26px; color: rgba(255,255,255,0.78); max-width: 1500px; line-height: 1.5; }
+  .s-image .eyebrow { color: var(--exd-accent-alt); }
+  .s-image .tech-tags {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 32px;
+    max-width: 1300px;
+  }
+  .s-image .tech-tags .tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 100px;
+    font-size: 13px; letter-spacing: 0.1em;
+    text-transform: uppercase; font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.06);
+    line-height: 1.1;
+  }
+
+  /* Clients grid */
+  .s-clients .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 20px; margin-top: 32px;
+  }
+  .s-clients .frame { justify-content: center; }
+  .s-clients .logo-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(13,15,30,0.08);
+    border-radius: 24px;
+    padding: 28px 24px;
+    min-height: 170px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+  }
+  .s-clients .logo-card img {
+    max-height: 76px; max-width: 76%; object-fit: contain;
+  }
+  .s-clients .logo-card .tag {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    padding: 5px 12px;
+    border: 1px solid rgba(13,15,30,0.18);
+    border-radius: 100px;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--exd-fg-3); font-weight: 500;
+    line-height: 1.1;
+    background: rgba(255,255,255,0.8);
+  }
+  .s-clients .logo-card.more-card {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  .s-clients .more-card .more-num {
+    font-family: var(--exd-serif);
+    font-style: italic;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--exd-accent-alt);
+  }
+  .s-clients .more-card .more-label {
+    font-size: 16px;
+    letter-spacing: 0.04em;
+    color: var(--exd-fg-2);
+    font-weight: 500;
+  }
+  section[data-label="03 Clients"][data-deck-active] .logo-card {
+    animation: client-card-fade 0.3s ease-out forwards;
+    animation-delay: calc(var(--i, 0) * 0.04s);
+  }
+  @keyframes client-card-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Timeline */
+  .s-timeline .track { position: relative; margin-top: 120px; height: 380px; }
+  .s-timeline .line {
+    position: absolute; left: 0; right: 0; top: 80px;
+    height: 1px; background: rgba(13,15,30,0.15);
+  }
+  .s-timeline .nodes { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; }
+  .s-timeline .node { display: flex; flex-direction: column; align-items: flex-start; }
+  .s-timeline .node .marker {
+    width: 24px; height: 24px; border-radius: 50%;
+    border: 2px solid var(--exd-fg-1);
+    background: var(--exd-bone);
+    margin-top: 70px; position: relative; z-index: 1;
+  }
+  .s-timeline .node.active .marker {
+    background: var(--exd-accent-alt); border-color: var(--exd-accent-alt);
+    box-shadow: 0 0 0 8px rgba(233,25,62,0.18);
+  }
+  .s-timeline .node .when { font-family: var(--exd-serif); font-style: italic; font-size: 36px; color: var(--exd-accent-alt); line-height: 1; margin-top: 28px; }
+  .s-timeline .node .what { font-size: 28px; font-weight: 700; line-height: 1.2; margin-top: 16px; }
+  .s-timeline .node .desc { font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); margin-top: 10px; max-width: 280px; }
+
+  /* Pricing/tiers */
+  .s-pricing .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 56px; margin-bottom: 120px; }
+  .s-pricing .tier {
+    background: #fff;
+    border: 1px solid rgba(13,15,30,0.08);
+    border-radius: 28px;
+    padding: 48px 44px;
+    display:flex; flex-direction: column; gap: 28px;
+    min-height: 720px;
+    margin-bottom: 40px;
+  }
+  .s-pricing .tier.featured {
+    background: var(--exd-ink); color: #fff;
+    border-color: var(--exd-ink);
+    position: relative;
+  }
+  .s-pricing .tier.featured::before {
+    content: "Most popular";
+    position: absolute; top: -16px; right: 32px;
+    background: var(--exd-accent-alt); color: #fff;
+    padding: 8px 18px; border-radius: 100px;
+    font-size: 24px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .s-pricing .tier .name { font-size: 28px; font-weight: 700; }
+  .s-pricing .tier .price { font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+  .s-pricing .tier .price span { font-size: 22px; font-weight: 400; color: var(--exd-fg-4); margin-left: 8px; display: block; margin-top: 12px; letter-spacing: 0.04em; }
+  .s-pricing .tier.featured .price span { color: rgba(255,255,255,0.6); }
+  .s-pricing .tier .lede { font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); }
+  .s-pricing .tier.featured .lede { color: rgba(255,255,255,0.7); }
+  .s-pricing .tier ul { list-style: none; margin: 0; padding: 0; display:flex; flex-direction: column; gap: 14px; }
+  .s-pricing .tier li { font-size: 24px; line-height: 1.5; padding-left: 32px; position: relative; }
+  .s-pricing .tier li::before {
+    content:""; width: 14px; height: 8px;
+    border-left: 2px solid var(--exd-accent-alt); border-bottom: 2px solid var(--exd-accent-alt);
+    position: absolute; left: 0; top: 8px; transform: rotate(-45deg);
+  }
+  .s-pricing .tier .cta {
+    margin-top: auto;
+    background: var(--exd-fg-1); color: #fff;
+    border: 0; padding: 22px 28px;
+    border-radius: 100px; font-size: 24px; font-weight: 500;
+    text-align: center;
+  }
+  .s-pricing .tier.featured .cta { background: var(--exd-accent-alt); }
+
+  /* CTA slide (Ready for the next step) */
+  .s-cta { background: var(--exd-ink); color: #fff; display: flex; align-items: center; }
+  /* Animated 3-piece orb (same technique as the cover), positioned top-right. */
+  .s-cta .orb-stack {
+    position: absolute;
+    width: 1400px; height: 1400px;
+    right: -340px; top: -360px;
+    pointer-events: none;
+    z-index: 1;
+    isolation: isolate;
+  }
+  .s-cta .orb-piece {
+    position: absolute;
+    width: 760px; height: 760px;
+    top: 320px; left: 320px;
+    border-radius: 50%;
+    filter: blur(56px);
+    mix-blend-mode: screen;
+    will-change: transform;
+  }
+  .s-cta .orb-piece.p1 {
+    background: radial-gradient(circle at 50% 50%, #e9193e 0%, rgba(233,25,62,0.6) 38%, transparent 70%);
+    animation: cover-orb-1 9s ease-in-out infinite;
+  }
+  .s-cta .orb-piece.p2 {
+    background: radial-gradient(circle at 50% 50%, #8e2aa3 0%, rgba(107,31,122,0.65) 38%, transparent 72%);
+    animation: cover-orb-2 11s ease-in-out infinite;
+  }
+  .s-cta .orb-piece.p3 {
+    background: radial-gradient(circle at 50% 50%, #3a3aa8 0%, rgba(30,27,158,0.65) 38%, transparent 72%);
+    animation: cover-orb-3 13s ease-in-out infinite;
+  }
+  .s-cta .stack { position: relative; z-index: 2; max-width: 1500px; }
+  .s-cta .h-display { font-size: 168px; line-height: 0.94; margin-top: 32px; }
+  .s-cta .h-display .serif { color: rgba(255,255,255,0.65); }
+  .s-cta .cta-btn {
+    display: inline-flex; align-items: center; gap: 14px;
+    background: var(--exd-accent-alt); color: #fff;
+    padding: 24px 40px;
+    border-radius: 100px;
+    font-size: 26px; font-weight: 500;
+    text-decoration: none;
+    margin-top: 64px;
+    width: fit-content;
+  }
+  .s-cta .footer-row {
+    position: absolute; left: var(--pad-x); right: var(--pad-x); bottom: 96px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 48px;
+    max-width: 1500px; z-index: 2;
+  }
+  .s-cta .footer-row .item { display: flex; flex-direction: column; gap: 12px; }
+  .s-cta .footer-row .lbl {
+    font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,255,255,0.45); font-weight: 500;
+  }
+  .s-cta .footer-row .val { font-size: 28px; font-weight: 500; }
+
+  /* Closing */
+  .s-close { background: var(--exd-ink); color: #fff; display: flex; align-items: center; }
+  .s-close .orb {
+    width: 1200px; height: 1200px;
+    right: -300px; bottom: -300px;
+    opacity: 0.7;
+  }
+  .s-close .stack { position: relative; z-index: 2; max-width: 1600px; }
+  .s-close .h-display { font-size: 180px; line-height: 0.94; letter-spacing: -0.02em; }
+  .s-close .h-display .serif { color: rgba(255,255,255,0.55); }
+  .s-close .row { margin-top: 100px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 48px; max-width: 1500px; }
+  .s-close .row .item { display:flex; flex-direction: column; gap: 12px; }
+  .s-close .row .item .lbl { font-size: 24px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .s-close .row .item .val { font-size: 30px; font-weight: 500; }
+
+  .stack > * + * { margin-top: 0; }
+  .row-baseline { display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+
+  /* Quantum animation (slide 05, first column) */
+  .quantum-anim { position: relative; overflow: hidden; background: rgba(13,15,30,0.5); }
+  .quantum-anim .glow-big {
+    position: absolute;
+    width: 28%;
+    aspect-ratio: 1;
+    top: 50%;
+    border-radius: 50%;
+    background: var(--exd-orb);
+    filter: blur(36px);
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    animation: q-big-enter 2.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .quantum-anim .glow-small {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation:
+      q-small-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+      q-small-pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes q-big-enter {
+    0%   { left: -25%; opacity: 0;    transform: translate(-50%, -50%) scale(0.65); }
+    60%  { opacity: 0.95; }
+    100% { left: 50%;  opacity: 0.9;  transform: translate(-50%, -50%) scale(1);    }
+  }
+  @keyframes q-small-enter {
+    0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  @keyframes q-small-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1);    filter: brightness(1);   }
+    50%      { transform: translate(-50%, -50%) scale(1.49); filter: brightness(1.6); }
+  }
+
+  /* Integration animation (slide 05, second column) */
+  .int-anim { position: relative; overflow: hidden; background: rgba(13,15,30,0.5); }
+  .int-anim .int-big {
+    position: absolute;
+    width: 3%;
+    aspect-ratio: 1;
+    top: 50%;
+    left: -8%;
+    border-radius: 50%;
+    background: #7DBEF5;
+    box-shadow: 0 0 10px #7DBEF5, 0 0 22px #7DBEF5, 0 0 40px rgba(125,190,245,0.55);
+    transform: translate(-50%, -50%);
+    animation: int-big-move 7s linear infinite;
+    z-index: 3;
+  }
+  .int-anim .int-trail {
+    position: absolute;
+    width: 18%;
+    height: 5%;
+    top: 50%;
+    left: -8%;
+    transform: translate(-100%, -50%);
+    background: linear-gradient(to right, rgba(125,190,245,0), rgba(125,190,245,0.35) 65%, rgba(125,190,245,0.7));
+    border-radius: 999px;
+    filter: blur(6px);
+    animation: int-big-move 7s linear infinite;
+    z-index: 2;
+  }
+  @keyframes int-big-move {
+    0%   { left: -8%;  }
+    100% { left: 108%; }
+  }
+  .int-anim .int-dot {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+    animation: int-dot-life 7s ease-in-out infinite;
+    z-index: 1;
+  }
+  @keyframes int-dot-life {
+    0%   { opacity: 0;    transform: translate(-50%, -50%) scale(0.4); }
+    8%   { opacity: 1;    transform: translate(-50%, -50%) scale(1.3); }
+    18%  { opacity: 0.95; transform: translate(-50%, -50%) scale(1);   }
+    28%  { opacity: 0.7;  transform: translate(-50%, -50%) scale(1.2); }
+    40%  { opacity: 0;    transform: translate(-50%, -50%) scale(0.5); }
+    100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.4); }
+  }
+
+  /* Full-screen animation slides (slides 06, 07, 08).
+     Each contains one of the three animations as a full-bleed background,
+     with text content positioned bottom-left over a subtle scrim. */
+  .s-fullanim { padding: 0; background: var(--exd-bone); }
+  .s-fullanim .lens-anim,
+  .s-fullanim .dyn-anim {
+    position: absolute;
+    inset: 0;
+    border-radius: 0;
+    border: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+  /* wander-anim: no z-index so its children (orb + sparkles) can stack
+     in the SECTION's context — that lets them sit above the scrim. */
+  .s-fullanim .wander-anim {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* Slide 06 — single orb wandering from left to right */
+  .wander-anim { background: var(--exd-bone); }
+  .wander-anim .wander-orb {
+    position: absolute;
+    width: 14%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--exd-orb);
+    filter: blur(12px);
+    top: 50%;
+    left: -15%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    animation: wander-path 14s ease-in-out infinite,
+               wander-pulse 9s ease-in-out infinite;
+    will-change: left, top, transform;
+  }
+  /* Irregular keyframes with a backward loop at mid-slide (between 42% and
+     73% of the cycle). The orb approaches, traces a counter-clockwise loop,
+     then resumes forward motion. */
+  @keyframes wander-path {
+    0%   { left: -15%; top: 30%; animation-timing-function: cubic-bezier(0.35, 0.05, 0.45, 0.95); }
+    12%  { left: 6%;   top: 22%; animation-timing-function: cubic-bezier(0.5,  0,    0.4,  1);    }
+    22%  { left: 18%;  top: 38%; animation-timing-function: cubic-bezier(0.6,  0.1,  0.3,  0.95); }
+    30%  { left: 28%;  top: 24%; animation-timing-function: cubic-bezier(0.4,  0,    0.55, 1);    }
+    38%  { left: 45%;  top: 28%; animation-timing-function: cubic-bezier(0.5,  0.15, 0.5,  0.85); }
+    /* loop start: east → north → west → south → east */
+    42%  { left: 55%;  top: 25%; animation-timing-function: ease-in-out; }
+    48%  { left: 50%;  top: 20%; animation-timing-function: ease-in-out; }
+    55%  { left: 38%;  top: 28%; animation-timing-function: ease-in-out; }
+    62%  { left: 45%;  top: 38%; animation-timing-function: ease-in-out; }
+    68%  { left: 58%;  top: 38%; animation-timing-function: ease-in-out; }
+    73%  { left: 65%;  top: 30%; animation-timing-function: cubic-bezier(0.5,  0,    0.4,  1);    }
+    /* loop closed — continue forward */
+    80%  { left: 78%;  top: 24%; animation-timing-function: cubic-bezier(0.45, 0,    0.55, 1);    }
+    88%  { left: 92%;  top: 30%; animation-timing-function: cubic-bezier(0.4,  0.1,  0.6,  1);    }
+    95%  { left: 108%; top: 26%; animation-timing-function: cubic-bezier(0.5,  0,    0.5,  1);    }
+    100% { left: 120%; top: 30%; }
+  }
+  @keyframes wander-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1)    rotate(0deg);   }
+    50%      { transform: translate(-50%, -50%) scale(1.15) rotate(180deg); }
+  }
+  /* Sparkles that pop in along the orb's path — stars trailing the trajectory */
+  .wander-anim .wander-sparkle {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    animation: sparkle-life 14s linear infinite;
+    z-index: 5;
+    pointer-events: none;
+  }
+  @keyframes sparkle-life {
+    0%   { opacity: 0;    transform: translate(-50%, -50%) scale(0.3); }
+    1.5% { opacity: 1;    transform: translate(-50%, -50%) scale(1.4); }
+    4%   { opacity: 0.85; transform: translate(-50%, -50%) scale(1);   }
+    9%   { opacity: 0;    transform: translate(-50%, -50%) scale(0.4); }
+    100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.3); }
+  }
+  .s-fullanim .scrim-bottom {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      rgba(245,244,239,0) 35%,
+      rgba(245,244,239,0.55) 65%,
+      rgba(245,244,239,0.96) 95%);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .s-fullanim .content {
+    position: absolute;
+    left: var(--pad-x);
+    right: var(--pad-x);
+    bottom: 96px;
+    max-width: 1700px;
+    z-index: 3;
+  }
+  .s-fullanim .content .num {
+    font-family: var(--exd-serif);
+    font-style: italic;
+    font-size: 64px;
+    color: var(--exd-accent-alt);
+    line-height: 1;
+    display: block;
+    margin-bottom: 20px;
+  }
+  .s-fullanim .content .h-title {
+    font-size: 88px;
+    line-height: 1.04;
+    margin: 0;
+    color: var(--exd-fg-1);
+  }
+  .s-fullanim .content .lede {
+    font-size: 28px;
+    line-height: 1.5;
+    color: var(--exd-fg-2);
+    margin-top: 24px;
+    max-width: 1300px;
+    font-weight: 300;
+  }
+
+  /* Ownership animation (slide 05, third column) */
+  .own-anim { position: relative; overflow: hidden; background: var(--exd-bone); }
+  .own-anim.no-glow .own-azure,
+  .own-anim.no-glow .own-cloud {
+    box-shadow: none !important;
+    transform: translate(-50%, -50%) scale(1);
+    animation-name: own-life-flat;
+  }
+  @keyframes own-life-flat {
+    0%, 100% { opacity: 0; }
+    3%, 14%  { opacity: 1; }
+    18%      { opacity: 0; }
+  }
+
+  /* Dynamic orb animation (slide 05, third column) */
+  .dyn-anim {
+    position: relative;
+    overflow: hidden;
+    background: var(--exd-bone);
+    isolation: isolate;
+  }
+  .dyn-anim .dyn-orb {
+    position: absolute;
+    width: 30%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    left: 50%;
+    top: 50%;
+    background: var(--exd-orb);
+    filter: blur(14px);
+    animation: orb-spin 14s linear infinite;
+    z-index: 2;
+  }
+  @keyframes orb-spin {
+    0%   { transform: translate(-50%, -50%) rotate(0deg)   scale(1);    }
+    50%  { transform: translate(-50%, -50%) rotate(180deg) scale(1.12); }
+    100% { transform: translate(-50%, -50%) rotate(360deg) scale(1);    }
+  }
+  .dyn-anim .dyn-dot {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    animation: dot-fly 4s cubic-bezier(0.5, 0, 0.9, 0.4) infinite;
+    z-index: 1;
+  }
+  @keyframes dot-fly {
+    0%   { left: var(--start-x); top: var(--start-y); transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+    6%   {                                            transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+    75%  {                                            transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+    100% { left: 50%;            top: 50%;            transform: translate(-50%,-50%) scale(0.1); opacity: 0; }
+  }
+  .own-anim .own-azure {
+    position: absolute;
+    width: 10%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--exd-orb);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation: own-life 24s ease-in-out infinite;
+    filter: blur(8px);
+  }
+  .own-anim .own-cloud {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+    animation: own-life 24s ease-in-out infinite;
+  }
+  @keyframes own-life {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0);    filter: brightness(1);   }
+    3%   { opacity: 1; transform: translate(-50%, -50%) scale(1.4);  filter: brightness(1.9); }
+    6%   { opacity: 1; transform: translate(-50%, -50%) scale(1.05); filter: brightness(1.1); }
+    10%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25); filter: brightness(1.6); }
+    14%  { opacity: 1; transform: translate(-50%, -50%) scale(1);    filter: brightness(1.05);}
+    18%  { opacity: 0; transform: translate(-50%, -50%) scale(0.6);  filter: brightness(1);   }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0);    filter: brightness(1);   }
+  }
+
+  /* Lens animation (slide 05, second column) */
+  .lens-anim {
+    position: relative;
+    overflow: hidden;
+    background: var(--exd-bone);
+    isolation: isolate;
+  }
+  .lens-anim .lens {
+    position: absolute;
+    width: 38%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .lens-anim .lens-1 {
+    background: radial-gradient(circle,
+      rgba(246,38,103,0.35) 0%,
+      rgba(246,38,103,0.65) 65%,
+      rgba(246,38,103,0.95) 100%);
+    box-shadow: 0 0 60px rgba(246,38,103,0.7), 0 0 110px rgba(246,38,103,0.45);
+    animation: lens1-move 13s ease-in-out infinite;
+  }
+  .lens-anim .lens-2 {
+    background: radial-gradient(circle,
+      rgba(93,169,240,0.35) 0%,
+      rgba(93,169,240,0.65) 65%,
+      rgba(93,169,240,0.95) 100%);
+    box-shadow: 0 0 60px rgba(93,169,240,0.7), 0 0 110px rgba(93,169,240,0.45);
+    animation: lens2-move 16s ease-in-out infinite;
+  }
+  .lens-anim .lens-3 {
+    background: radial-gradient(circle,
+      rgba(179,157,252,0.35) 0%,
+      rgba(179,157,252,0.65) 65%,
+      rgba(179,157,252,0.95) 100%);
+    box-shadow: 0 0 60px rgba(179,157,252,0.7), 0 0 110px rgba(179,157,252,0.45);
+    animation: lens3-move 19s ease-in-out infinite;
+  }
+  @keyframes lens1-move {
+    0%, 100% { left: 30%; top: 40%; }
+    25%      { left: 62%; top: 65%; }
+    50%      { left: 70%; top: 32%; }
+    75%      { left: 35%; top: 72%; }
+  }
+  @keyframes lens2-move {
+    0%, 100% { left: 65%; top: 55%; }
+    25%      { left: 32%; top: 70%; }
+    50%      { left: 50%; top: 28%; }
+    75%      { left: 72%; top: 48%; }
+  }
+  @keyframes lens3-move {
+    0%, 100% { left: 50%; top: 70%; }
+    25%      { left: 70%; top: 35%; }
+    50%      { left: 28%; top: 52%; }
+    75%      { left: 55%; top: 62%; }
+  }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- 01 · Cover -->
+  <section class="s-cover" data-label="01 Cover">
+    <div class="orb-stack" aria-hidden="true">
+      <div class="orb-piece p3"></div>
+      <div class="orb-piece p2"></div>
+      <div class="orb-piece p1"></div>
+    </div>
+    <div class="top-row">
+      <img src="exd/logo-exd-light.svg" alt=".exd" />
+      <span class="ref">2026</span>
+    </div>
+    <div class="frame">
+      <h1 class="h-display">
+        We design<br/>
+        and <span class="serif">build</span><br/>
+        modern growth.
+      </h1>
+    </div>
+    <div class="meta-row">
+      <span>Introducing .exd</span>
+    </div>
+    <div class="meta-right">
+      <span>To Recla</span>
+    </div>
+  </section>
+
+  <!-- 02 · Statement -->
+  <section class="s-statement" data-label="02 Statement">
+    <div class="frame" style="justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <p class="eyebrow">Who we are</p>
+        <h2 class="h-display" style="margin-top: 40px; font-size: 76px; line-height: 1.1; max-width: 1600px;">
+          <span class="reveal r1">Brand, marketing and sales can <span class="serif">finally</span> run as an integrated system for growth.</span>
+          <span class="reveal r2" style="font-weight: 300;">Leading European companies are choosing .exd to design and build it.</span>
+        </h2>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">02</span></div>
+  </section>
+
+  <!-- 03 · Clients -->
+  <section class="s-clients" data-label="03 Clients">
+    <div class="frame">
+      <h2 class="h-title" style="max-width: 1500px;">
+        Partners <span class="serif">in growth.</span>
+      </h2>
+      <div class="grid">
+        <div class="logo-card" style="--i: 0">
+          <img src="exd/img/client%20logos/credit%20agricole.png" alt="Crédit Agricole" />
+          <span class="tag">Finance</span>
+        </div>
+        <div class="logo-card" style="--i: 1">
+          <img src="exd/img/client%20logos/dabpumps.png" alt="DAB Pumps" />
+          <span class="tag">Manufacturing</span>
+        </div>
+        <div class="logo-card" style="--i: 2">
+          <img src="exd/img/client%20logos/Luxardo_logo.png" alt="Luxardo" />
+          <span class="tag">Food &amp; drink</span>
+        </div>
+        <div class="logo-card" style="--i: 3">
+          <img src="exd/img/client%20logos/vVardis-logo-2.png" alt="vVARDIS" />
+          <span class="tag">Healthcare</span>
+        </div>
+        <div class="logo-card" style="--i: 4">
+          <img src="exd/img/client%20logos/Logo%20PG.png" alt="Pasticceria Giotto" />
+          <span class="tag">Food &amp; drink</span>
+        </div>
+        <div class="logo-card" style="--i: 5">
+          <img src="exd/img/client%20logos/logo_elevate.png" alt="Elevate" />
+          <span class="tag">Technology</span>
+        </div>
+        <div class="logo-card" style="--i: 6">
+          <img src="exd/img/client%20logos/selleroyal-logo-positive_rgb_png.avif" alt="Selle Royal" />
+          <span class="tag">Manufacturing</span>
+        </div>
+        <div class="logo-card" style="--i: 7">
+          <img src="exd/img/client%20logos/B-Flex_logo.png" alt="B-Flex" />
+          <span class="tag">Manufacturing</span>
+        </div>
+        <div class="logo-card" style="--i: 8">
+          <img src="exd/img/client%20logos/savi_logotype_green_rgb_large-768x310.png" alt="Savi" />
+          <span class="tag">Retail</span>
+        </div>
+        <div class="logo-card" style="--i: 9">
+          <img src="exd/img/client%20logos/Altilia-Logo-1.png" alt="Altilia" />
+          <span class="tag">SaaS</span>
+        </div>
+        <div class="logo-card" style="--i: 10">
+          <img src="exd/img/client%20logos/logo-euris-colori-rgb.png" alt="Euris" />
+          <span class="tag">Technology</span>
+        </div>
+        <div class="logo-card more-card" style="--i: 11">
+          <span class="more-num">+26</span>
+          <span class="more-label">active clients</span>
+        </div>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">03</span></div>
+  </section>
+
+  <!-- 04 · Chapter 01 · Why -->
+  <section class="s-section" data-label="04 Chapter 01">
+    <div class="orb-stack" aria-hidden="true">
+      <div class="orb-piece p3"></div>
+      <div class="orb-piece p2"></div>
+      <div class="orb-piece p1"></div>
+    </div>
+    <div class="row">
+      <div class="num">01</div>
+      <div class="right">
+        <p class="eyebrow" style="color: rgba(255,255,255,0.55);">Chapter</p>
+        <h2 class="h-display">
+          Why <span class="serif">now</span>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 · Quantum Leap (title only) -->
+  <section class="bg-raspberry" data-label="05 Quantum Leap" style="display: flex; align-items: center;">
+    <div class="frame" style="position: relative; z-index: 1; justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <h2 class="h-display" style="font-size: 132px; line-height: 1.0; color: #fff; max-width: 1700px;">
+          A quantum leap<br/>in <span class="serif">go-to-market.</span>
+        </h2>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.45);">05</span></div>
+  </section>
+
+  <!-- 06 · Full-screen animation · Adaptive customer experiences -->
+  <section class="s-fullanim" data-label="06 Adaptive customer experiences">
+    <div class="wander-anim">
+      <div class="wander-orb"></div>
+    </div>
+    <div class="scrim-bottom"></div>
+    <div class="content">
+      <span class="num">i.</span>
+      <h2 class="h-title"><span style="font-weight: 300;">From dumb funnel<br/>to</span> adaptive customer experiences.</h2>
+      <p class="lede">AI tunes message, timing and value to every individual journey. No more segments, no more personas.</p>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">06</span></div>
+  </section>
+
+  <!-- 07 · Full-screen animation · Channel integration -->
+  <section class="s-fullanim" data-label="07 Channel integration">
+    <div class="lens-anim">
+      <div class="lens lens-1"></div>
+      <div class="lens lens-2"></div>
+      <div class="lens lens-3"></div>
+    </div>
+    <div class="scrim-bottom"></div>
+    <div class="content">
+      <span class="num">ii.</span>
+      <h2 class="h-title"><span style="font-weight: 300;">From lined-up functions<br/>to</span> full journey integration.</h2>
+      <p class="lede">Marketing, technology and sales run as a single engine. Not three teams passing briefs back and forth.</p>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">07</span></div>
+  </section>
+
+  <!-- 08 · Full-screen animation · Data autonomy -->
+  <section class="s-fullanim" data-label="08 Data autonomy">
+    <div class="dyn-anim">
+      <div class="dyn-orb"></div>
+    </div>
+    <div class="scrim-bottom"></div>
+    <div class="content">
+      <span class="num">iii.</span>
+      <h2 class="h-title"><span style="font-weight: 300;">From data dependency<br/>to</span> data autonomy.</h2>
+      <p class="lede">First-party data and automation layers, fully owned, fueling today's initiatives and unlocking tomorrow's.</p>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">08</span></div>
+  </section>
+
+  <!-- 06 · Statement · Twelve months from now -->
+  <section class="s-statement" data-label="06 Statement · Twelve months out">
+    <div class="frame" style="justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <p class="eyebrow">In twelve months from now</p>
+        <h2 class="h-display" style="margin-top: 40px; font-size: 72px; line-height: 1.1; max-width: 1700px;">
+          <span class="reveal r1">New category leaders will emerge across industries. They will know first, engage smarter, convert more.</span>
+          <span class="reveal r2" style="font-weight: 300;"><span class="serif">Will it be you?</span></span>
+        </h2>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">09</span></div>
+  </section>
+
+  <!-- 07 · Chapter 02 · What we bring -->
+  <section class="s-section" data-label="07 Chapter 02">
+    <div class="orb-stack" aria-hidden="true">
+      <div class="orb-piece p3"></div>
+      <div class="orb-piece p2"></div>
+      <div class="orb-piece p1"></div>
+    </div>
+    <div class="row">
+      <div class="num">02</div>
+      <div class="right">
+        <p class="eyebrow" style="color: rgba(255,255,255,0.55);">Chapter</p>
+        <h2 class="h-display">
+          What we<br/><span class="serif">bring.</span>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08 · Framework two-column -->
+  <section data-label="04 Pillars">
+    <div class="frame">
+      <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 120px; height: 100%; align-items: center;">
+        <div class="fr-left">
+          <p class="eyebrow">Framework</p>
+          <h2 class="h-title" style="margin-top: 24px;">
+            We design and build <span class="serif">state of the art</span> growth engines.
+          </h2>
+          <p class="body" style="margin-top: 40px; max-width: 560px; font-size: 28px;">Three dimensions that reinforce each other. People design the system, AI amplifies it, the market validates it every day.</p>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <div class="fr-item" style="--i: 0; padding: 36px 0; border-bottom: 1px solid rgba(13,15,30,0.12); display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 22px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--exd-accent-alt); font-weight: 500;">i. People</span>
+            <h3 style="font-size: 44px; font-weight: 700; line-height: 1.1; margin: 0;">Human craft.</h3>
+            <p style="font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); margin: 0; font-weight: 300; max-width: 700px;">Strategy, narrative, design, research, empathy. The craft AI cannot replicate.</p>
+          </div>
+          <div class="fr-item" style="--i: 1; padding: 36px 0; border-bottom: 1px solid rgba(13,15,30,0.12); display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 22px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--exd-accent-alt); font-weight: 500;">ii. Technology</span>
+            <h3 style="font-size: 44px; font-weight: 700; line-height: 1.1; margin: 0;">AI-powered.</h3>
+            <p style="font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); margin: 0; font-weight: 300; max-width: 700px;">Predictive scoring, LLM orchestration, content generation, AI media buying. The AI others haven't adopted yet.</p>
+          </div>
+          <div class="fr-item" style="--i: 2; padding: 36px 0; display: flex; flex-direction: column; gap: 14px;">
+            <span style="font-size: 22px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--exd-accent-alt); font-weight: 500;">iii. Execution</span>
+            <h3 style="font-size: 44px; font-weight: 700; line-height: 1.1; margin: 0;">Run in market.</h3>
+            <p style="font-size: 24px; line-height: 1.5; color: var(--exd-fg-3); margin: 0; font-weight: 300; max-width: 700px;">Lifecycle, demand generation, RevOps, attribution. A system that runs, measured against business outcomes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">11</span></div>
+  </section>
+
+  <!-- 09 · Statement · Targeted injection -->
+  <section class="bg-raspberry" data-label="09 Statement · Targeted injection" style="display: flex; align-items: center;">
+    <div class="frame" style="position: relative; z-index: 1; justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <p class="eyebrow" style="color: var(--exd-accent-alt);">Our role</p>
+        <h2 class="h-display" style="margin-top: 40px; font-size: 76px; line-height: 1.15; max-width: 1700px; color: #fff;">
+          .exd is a targeted injection of <span class="serif">expertise, method and technology</span>, wherever needed to unlock transformation.
+        </h2>
+        <div style="display: flex; justify-content: flex-end; margin-top: 96px; max-width: 1700px;">
+          <a href="#" style="display: inline-flex; align-items: center; gap: 14px; font-family: var(--exd-serif); font-style: italic; font-size: 44px; color: var(--exd-accent-alt); text-decoration: none;">See our impact <span>→</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.45);">12</span></div>
+  </section>
+
+  <!-- 10 · Case Study · Luxardo -->
+  <section class="s-image" data-label="10 Case · Luxardo">
+    <div class="bg" style="background-image: url('exd/img/luxardo.jpg');"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <p class="eyebrow">Food &amp; beverage · Spirits</p>
+      <h2 class="h-title" style="margin-top: 24px;">Luxardo</h2>
+      <p class="lede">Family-owned since 1821. There's a bottle of Maraschino behind every great bar in the world. We run their content and media engine, combining top-level creative production with AI-powered customization, distributed through signal-based and ABM targeting of importers and bartenders across new markets. Creative excellence and technology work in symbiosis, turning every market activation into measurable pipeline. The right people, at the right moment, in the right language.</p>
+      <div class="tech-tags">
+        <span class="tag">Signal-based targeting</span>
+        <span class="tag">Account-based marketing</span>
+        <span class="tag">AI creative customization</span>
+        <span class="tag">Content production</span>
+        <span class="tag">Paid media management</span>
+        <span class="tag">Intent data</span>
+        <span class="tag">Local market activation</span>
+        <span class="tag">Creative automation</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.6);">13</span></div>
+  </section>
+
+  <!-- 11 · Case Study · Pasticceria Giotto -->
+  <section class="s-image" data-label="11 Case · Pasticceria Giotto">
+    <div class="bg" style="background-image: url('exd/img/giottocase.jpg');"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <p class="eyebrow">Food &amp; beverage · Pastry</p>
+      <h2 class="h-title" style="margin-top: 24px;">Pasticceria Giotto</h2>
+      <p class="lede">One of the world's finest Panettone, crafted inside Padova's prison by master pastry chefs working alongside inmates. Featured by the New York Times and the most important food guides in the world. More than 100,000 panettoni a year, distributed globally. We redesigned and operate all customer journeys across every channel: e-commerce, B2B corporate gifting, proprietary stores and resellers. A unified customer data platform, enabling behavior-based communication timed to personal occasions and purchase patterns. Full integration of channels, creativity, marketing and technology, with complete measurability across every touchpoint, from first discovery to reorder.</p>
+      <div class="tech-tags">
+        <span class="tag">D2C</span>
+        <span class="tag">Customer data platform</span>
+        <span class="tag">Multichannel customer journey</span>
+        <span class="tag">Creative production</span>
+        <span class="tag">Behavioral marketing automation</span>
+        <span class="tag">Occasion-based triggers</span>
+        <span class="tag">Full-funnel attribution</span>
+        <span class="tag">E-commerce</span>
+        <span class="tag">AI marketing automation</span>
+        <span class="tag">ABM</span>
+        <span class="tag">Buying signals</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.6);">14</span></div>
+  </section>
+
+  <!-- 12 · Case Study · DAB Pumps -->
+  <section class="s-image" data-label="12 Case · DAB Pumps">
+    <div class="bg" style="background-image: url('https://cdn.sanity.io/images/apm72pei/production/aa443102e31cc67dfa791aedea7ce6cc835fe336-1920x1280.jpg?w=1920&q=85&auto=format');"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <p class="eyebrow">Manufacturing · Water Technologies</p>
+      <h2 class="h-title" style="margin-top: 24px;">DAB Pumps</h2>
+      <p class="lede">A world leader in water movement technologies, DAB Pumps operates through complex global distribution chains where distributors, installers, engineers and specifiers all influence the purchase long before it reaches the end client. We work as an embedded team running integrated growth engines across product lines and markets: demand generation, DTC and ABM, from brand to sales, enabled by technology. We help DAB build market pull through every layer of the distribution chain, reaching and activating the right stakeholders at the right moment, so demand flows toward the product rather than waiting to be pushed through.</p>
+      <div class="tech-tags">
+        <span class="tag">Demand generation</span>
+        <span class="tag">Account-based marketing</span>
+        <span class="tag">Signal-based distribution activation</span>
+        <span class="tag">D2C</span>
+        <span class="tag">Embedded growth team</span>
+        <span class="tag">Full-funnel integration</span>
+        <span class="tag">Marketing automation</span>
+        <span class="tag">Creative production</span>
+        <span class="tag">Brand-to-sales engine</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">15</span></div>
+  </section>
+
+  <!-- 13 · Case Study · vVardis -->
+  <section class="s-image" data-label="13 Case · vVardis">
+    <div class="bg" style="background-image: url('exd/img/vvardis.jpg');"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <p class="eyebrow">Healthcare · Dental</p>
+      <h2 class="h-title" style="margin-top: 24px;">vVardis</h2>
+      <p class="lede">A Swiss unicorn with a revolutionary biomimetic technology that treats early-stage cavities without drilling. A genuine category breakthrough in oral care. We built and operate their European omnichannel growth engine across two audiences simultaneously: professional adoption among dental practices and demand generation among consumers. Sell-in, local awareness and sell-out run in full sync, designed as a single integrated system. When patients ask for the treatment, dentists are already equipped and ready.</p>
+      <div class="tech-tags">
+        <span class="tag">Omnichannel growth engine</span>
+        <span class="tag">Professional adoption program</span>
+        <span class="tag">Consumer demand generation</span>
+        <span class="tag">Sell-in and sell-out integration</span>
+        <span class="tag">Local awareness activation</span>
+        <span class="tag">AI marketing automation</span>
+        <span class="tag">Full-funnel attribution</span>
+        <span class="tag">B2B and B2C synchronization</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.6);">16</span></div>
+  </section>
+
+  <!-- 14 · Case Study · Crédit Agricole -->
+  <section class="s-image" data-label="14 Case · Crédit Agricole">
+    <div class="bg" style="background-image: url('exd/img/ca.jpg');"></div>
+    <div class="scrim"></div>
+    <div class="content">
+      <p class="eyebrow">Finance · Banking</p>
+      <h2 class="h-title" style="margin-top: 24px;">Crédit Agricole</h2>
+      <p class="lede">One of Europe's largest banking groups, Crédit Agricole runs an innovation community connecting corporate clients with the most promising startups in the market. A living ecosystem where two very different audiences need to be found, engaged and activated simultaneously. We design and operate the full experience infrastructure of the community: omnichannel creative production, partner engagement and nurturing across every channel, and a dedicated startup recruitment and selection program. Every touchpoint across the community lifecycle is mapped, designed and automated, from first invitation to onboarding, from ongoing activation to milestone moments. The entire experience runs on full journey automation, at the scale a banking group of this size demands.</p>
+      <div class="tech-tags">
+        <span class="tag">Full journey automation</span>
+        <span class="tag">Community experience design</span>
+        <span class="tag">Partner engagement and nurturing</span>
+        <span class="tag">Startup recruitment</span>
+        <span class="tag">Omnichannel creative production</span>
+        <span class="tag">Lifecycle automation</span>
+        <span class="tag">CRM and marketing automation</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.6);">17</span></div>
+  </section>
+
+  <!-- 14 · Statement · Let's dive in -->
+  <section class="bg-raspberry" data-label="14 Statement · Call invitation" style="display: flex; align-items: center;">
+    <div class="frame" style="position: relative; z-index: 1; justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <p class="eyebrow" style="color: var(--exd-accent-alt);">There's more</p>
+        <h2 class="h-display" style="margin-top: 40px; font-size: 76px; line-height: 1.15; max-width: 1700px; color: #fff;">
+          <span style="font-weight: 300;">We track the</span> food industry <span style="font-weight: 300;">closely.</span><br/>
+          There are signals you should know about.<br/>
+          <span class="serif">Let's set up a call.</span>
+        </h2>
+        <!-- TODO: replace href with the actual booking URL -->
+        <a href="#" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 14px; margin-top: 48px; padding: 22px 38px; background: var(--exd-accent-alt); color: #fff; border-radius: 100px; font-size: 24px; font-weight: 500; text-decoration: none; width: fit-content;">Book a call <span>→</span></a>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /><span class="pgno" style="color: rgba(255,255,255,0.45);">18</span></div>
+  </section>
+
+  <!-- 15 · Chapter 03 · Where to start -->
+  <section class="s-section" data-label="15 Chapter 03">
+    <div class="orb-stack" aria-hidden="true">
+      <div class="orb-piece p3"></div>
+      <div class="orb-piece p2"></div>
+      <div class="orb-piece p1"></div>
+    </div>
+    <div class="row">
+      <div class="num">03</div>
+      <div class="right">
+        <p class="eyebrow" style="color: rgba(255,255,255,0.55);">Chapter</p>
+        <h2 class="h-display">
+          Where to<br/><span class="serif">start.</span>
+        </h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 · Two ways in -->
+  <section class="s-twoways" data-label="10 Two ways in">
+    <div class="frame">
+      <div class="tw-header">
+        <p class="eyebrow">Where to start</p>
+        <h2 class="h-title" style="margin-top: 24px; max-width: 1500px;">
+          Two ways <span class="serif">in.</span>
+        </h2>
+      </div>
+      <div class="row">
+        <div class="col tw-col" style="--i: 0">
+          <span class="num">i.</span>
+          <h3>Start sharp.</h3>
+          <p>We identify one high-impact moment in your customer journey and redesign it. Contained scope, clear outcome, fast results. A proof of concept that builds confidence for what comes next.</p>
+        </div>
+        <div class="col tw-col" style="--i: 1">
+          <span class="num">ii.</span>
+          <h3>Build it all.</h3>
+          <p>We design and build the entire growth system, from brand to demand to revenue, or transform what already exists into something new. End to end, embedded in your team.</p>
+        </div>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-dark.svg" alt="" /><span class="pgno">20</span></div>
+  </section>
+
+  <!-- 18 · CTA · Ready for the next step -->
+  <section class="s-cta" data-label="24 Ready for the next step">
+    <div class="orb-stack" aria-hidden="true">
+      <div class="orb-piece p3"></div>
+      <div class="orb-piece p2"></div>
+      <div class="orb-piece p1"></div>
+    </div>
+    <div class="frame">
+      <div class="stack">
+        <p class="eyebrow" style="color: var(--exd-accent-alt);">What's next</p>
+        <h2 class="h-display">
+          Ready for<br/>
+          the <span class="serif">next step?</span>
+        </h2>
+        <a class="cta-btn" href="https://calendly.com/meetings-exdpeople/30min" target="_blank" rel="noopener">Book a call <span>→</span></a>
+      </div>
+    </div>
+    <div class="footer-row">
+      <div class="item">
+        <span class="lbl">Email</span>
+        <span class="val">hello@exdpeople.org</span>
+      </div>
+      <div class="item">
+        <span class="lbl">Web</span>
+        <span class="val">exdpeople.org</span>
+      </div>
+      <div class="item">
+        <span class="lbl">Where we are</span>
+        <span class="val">Padova · Milano · remote</span>
+      </div>
+    </div>
+    <div class="chrome"><img class="mark" src="exd/logo-exd-light.svg" alt="" /></div>
+  </section>
+
+  <!-- 25 · Closing -->
+  <section class="s-close" data-label="16 Closing">
+    <div class="orb"></div>
+    <div class="frame" style="justify-content: center;">
+      <div class="stack" style="margin: auto 0;">
+        <p class="eyebrow" style="color: var(--exd-accent-alt);">Thank you</p>
+        <h2 class="h-display" style="margin-top: 40px;">
+          Let's keep<br/>
+          the <span class="serif">conversation</span> going.
+        </h2>
+        <div class="row">
+          <div class="item">
+            <span class="lbl">Email</span>
+            <span class="val">hello@exdpeople.org</span>
+          </div>
+          <div class="item">
+            <span class="lbl">Web</span>
+            <span class="val">exdpeople.org</span>
+          </div>
+          <div class="item">
+            <span class="lbl">Where we are</span>
+            <span class="val">Padova · Milano · remote</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</deck-stage>
+
+<script src="deck-stage.js"></script>
+
+<script>
+// Slide 06 — sparkles popping in along the wandering orb's trajectory.
+// Each sparkle is positioned with a small random offset from the orb's path
+// and its animation-delay is set so it lights up around the time the orb
+// reaches that point. Net effect: a trail of "stelline" tracking the orb.
+(function () {
+  const wrap = document.querySelector('.wander-anim');
+  if (!wrap) return;
+
+  // Keyframes mirror CSS @keyframes wander-path (time fraction → x%, y%)
+  const path = [
+    [0.00, -15, 30], [0.12,   6, 22], [0.22,  18, 38], [0.30,  28, 24],
+    [0.38,  45, 28], [0.42,  55, 25], [0.48,  50, 20], [0.55,  38, 28],
+    [0.62,  45, 38], [0.68,  58, 38], [0.73,  65, 30], [0.80,  78, 24],
+    [0.88,  92, 30], [0.95, 108, 26], [1.00, 120, 30]
+  ];
+  const ease = (t) => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
+  function orbAt(t) {
+    for (let i = 0; i < path.length - 1; i++) {
+      if (t >= path[i][0] && t <= path[i+1][0]) {
+        const local = (t - path[i][0]) / (path[i+1][0] - path[i][0]);
+        const e = ease(local);
+        return [path[i][1] + (path[i+1][1] - path[i][1]) * e,
+                path[i][2] + (path[i+1][2] - path[i][2]) * e];
+      }
+    }
+    return [path[path.length-1][1], path[path.length-1][2]];
+  }
+
+  const cycle = 14;
+  const numSparkles = 500;
+  const palette = ['#5DA9F0', '#7DBEF5', '#A5D3F8', '#b39dfc', '#f9a8d4',
+                   '#f62667', '#e9193e', '#b52050', '#6b1f7a', '#6eada3'];
+  const aspect = 16 / 9;
+  // Orb radius (in % units) + breathing room. Sparkles must sit beyond this.
+  const orbExclusion = 9;
+  // Vertical band: keep sparkles in the upper half so they don't fall
+  // into the title's bottom fade gradient (becomes opaque around y ≈ 50%).
+  const yMin = 4;
+  const yMax = 50;
+
+  for (let i = 0; i < numSparkles; i++) {
+    const t = Math.random();
+    const [ox, oy] = orbAt(t);
+    // Scatter: outside the orb (minR=orbExclusion), with mild bias toward closer
+    const angle = Math.random() * 2 * Math.PI;
+    const radius = orbExclusion + Math.pow(Math.random(), 1.4) * 14;
+    const x = ox + Math.cos(angle) * radius;
+    const y = oy + Math.sin(angle) * radius * aspect;
+    if (x < -2 || x > 102) continue;
+    if (y < yMin || y > yMax) continue;
+
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    const size = 0.15 + Math.random() * 0.25;
+    // Lead the orb slightly so sparkles "anticipate" then fade as it passes
+    const lead = 0.15 + Math.random() * 0.6;
+    const delay = (t * cycle - lead).toFixed(2);
+
+    const s = document.createElement('div');
+    s.className = 'wander-sparkle';
+    s.style.cssText =
+      'left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) +
+      '%;width:' + size.toFixed(2) + '%' +
+      ';background:' + color +
+      ';box-shadow:0 0 4px ' + color + ',0 0 9px ' + color +
+      ';animation-delay:' + delay + 's';
+    wrap.appendChild(s);
+  }
+})();
+</script>
+
+<script>
+(function () {
+  const wrap = document.querySelector('.dyn-anim');
+  if (!wrap) return;
+  const palette = ['#5DA9F0', '#7DBEF5', '#A5D3F8', '#b39dfc', '#6eada3', '#f9a8d4',
+                   '#f62667', '#e9193e', '#b52050', '#6b1f7a'];
+  const aspect = 16 / 9;
+  const numDots = 300;
+  for (let i = 0; i < numDots; i++) {
+    const angle = Math.random() * 2 * Math.PI;
+    const r = 50 + Math.random() * 40;                       // 50..90 (% of width)
+    const startX = 50 + Math.cos(angle) * r;
+    const startY = 50 + Math.sin(angle) * r * aspect;
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    const size = 0.3 + Math.random() * 0.6;                  // 0.30..0.90
+    const duration = 3 + Math.random() * 4;                  // 3..7s
+    const delay = -Math.random() * duration;                 // negative → start mid-cycle
+    const dot = document.createElement('div');
+    dot.className = 'dyn-dot';
+    dot.style.cssText =
+      'width:' + size.toFixed(2) + '%;background:' + color +
+      ';--start-x:' + startX.toFixed(2) +
+      '%;--start-y:' + startY.toFixed(2) +
+      '%;animation-duration:' + duration.toFixed(2) +
+      's;animation-delay:' + delay.toFixed(2) + 's';
+    wrap.appendChild(dot);
+  }
+})();
+
+(function () {
+  const wraps = document.querySelectorAll('.own-anim');
+  if (!wraps.length) return;
+  // Each event = 1 azure main dot + a small cloud of red/purple dots around it.
+  // Events fire roughly every 2s with slight jitter; total cycle 24s.
+  const events = [
+    { x: 18, y: 32, delay: 0.0  },
+    { x: 65, y: 25, delay: 1.8  },
+    { x: 38, y: 70, delay: 4.1  },
+    { x: 82, y: 55, delay: 5.7  },
+    { x: 12, y: 60, delay: 8.0  },
+    { x: 55, y: 42, delay: 10.3 },
+    { x: 75, y: 80, delay: 11.9 },
+    { x: 28, y: 18, delay: 14.2 },
+    { x: 90, y: 35, delay: 16.1 },
+    { x: 45, y: 85, delay: 18.0 },
+    { x: 8,  y: 78, delay: 19.8 },
+    { x: 68, y: 12, delay: 22.1 }
+  ];
+  const cloud = ['#e9193e', '#f62667', '#b52050', '#6b1f7a', '#b39dfc', '#3b2080'];
+  // Primary orbs: multi-stop radial gradients in the same family as --exd-orb
+  // (slide 08's dyn-orb). Each has an offset center for asymmetric "blob" feel.
+  const primaryGradients = [
+    'radial-gradient(circle at 36% 34%, #1e1b5e 0%, #3b2080 18%, #6b1f7a 36%, #b52050 56%, #e9193e 75%, rgba(233,25,62,0) 100%)',
+    'radial-gradient(circle at 62% 30%, #1e1b5e 0%, #3b2080 22%, #6b1f7a 45%, #f62667 68%, rgba(246,38,103,0) 100%)',
+    'radial-gradient(circle at 40% 62%, #3b2080 0%, #6b1f7a 22%, #b52050 48%, #e9193e 72%, rgba(233,25,62,0) 100%)',
+    'radial-gradient(circle at 55% 45%, #1e1b5e 0%, #5DA9F0 22%, #b39dfc 48%, #6b1f7a 75%, rgba(107,31,122,0) 100%)',
+    'radial-gradient(circle at 30% 50%, #3b2080 0%, #b39dfc 25%, #f9a8d4 50%, #f62667 72%, rgba(246,38,103,0) 100%)',
+    'radial-gradient(circle at 50% 40%, #1e1b5e 0%, #6b1f7a 25%, #b52050 50%, #e9193e 70%, rgba(233,25,62,0) 100%)'
+  ];
+  const aspect = 16 / 9;
+  // Asymmetric random distribution within an annulus: minR keeps dots outside the
+  // azure dot's solid+glow area, so they never overlap it. Angles are evenly seeded
+  // with deterministic jitter, distances vary freely → organic, non-rigid cloud.
+  const cloudCount = 26;
+  const minR = 11;
+  const maxR = 19;
+  wraps.forEach((wrap) => {
+    events.forEach((ev, i) => {
+      const azGradient = primaryGradients[i % primaryGradients.length];
+      const az = document.createElement('div');
+      az.className = 'own-azure';
+      az.style.cssText =
+        'left:' + ev.x + '%;top:' + ev.y +
+        '%;background:' + azGradient +
+        ';animation-delay:' + ev.delay + 's';
+      wrap.appendChild(az);
+      for (let j = 0; j < cloudCount; j++) {
+        // Independent random angle / radius / stagger → no spiral, true cloud
+        const angle = Math.random() * 2 * Math.PI;
+        const r = minR + Math.random() * (maxR - minR);
+        const dx = Math.cos(angle) * r;
+        const dy = Math.sin(angle) * r * aspect;
+        const cx = ev.x + dx;
+        const cy = ev.y + dy;
+        if (cx < 2 || cx > 98 || cy < 4 || cy > 96) continue;
+        const color = cloud[Math.floor(Math.random() * cloud.length)];
+        const size = 0.7 + Math.random() * 0.5;              // 0.70..1.20
+        const delay = ev.delay + 0.2 + Math.random() * 0.55; // random stagger after azure
+        const cd = document.createElement('div');
+        cd.className = 'own-cloud';
+        cd.style.cssText =
+          'width:' + size.toFixed(2) + '%;left:' + cx.toFixed(2) + '%;top:' + cy.toFixed(2) +
+          '%;background:' + color +
+          ';box-shadow:0 0 3px ' + color + ',0 0 8px ' + color +
+          ';animation-delay:' + delay.toFixed(2) + 's';
+        wrap.appendChild(cd);
+      }
+    });
+  });
+})();
+
+(function () {
+  const wrap = document.querySelector('.int-anim');
+  if (!wrap) return;
+  const palette = ['#b39dfc', '#f9a8d4', '#f62667', '#b52050', '#6b1f7a', '#e9193e'];
+  const T = 7;          // matches int-big-move duration
+  const peakPct = 18;   // dot is at "settled" state (cycle 18%) when big dot is at its x
+  // 4 parallel rows above and below the trajectory; alternating x-shift gives a brick pattern
+  const rows = [
+    { y: 36, shift: 0 },
+    { y: 44, shift: 5 },
+    { y: 56, shift: 0 },
+    { y: 64, shift: 5 }
+  ];
+  let n = 0;
+  rows.forEach((row) => {
+    for (let i = 0; i < 10; i++) {
+      const x = 4 + i * 10 + row.shift;
+      if (x > 96) continue;
+      const size = 1 + ((n * 53) % 70) / 100;
+      const color = palette[n % palette.length];
+      const delay = ((x - peakPct) / 100) * T;
+      const dot = document.createElement('div');
+      dot.className = 'int-dot';
+      dot.style.cssText =
+        'width:' + size.toFixed(2) + '%;left:' + x + '%;top:' + row.y +
+        '%;background:' + color +
+        ';box-shadow:0 0 4px ' + color + ',0 0 10px ' + color +
+        ';animation-delay:' + delay.toFixed(2) + 's';
+      wrap.appendChild(dot);
+      n++;
+    }
+  });
+})();
+
+(function () {
+  const wrap = document.querySelector('.quantum-anim');
+  if (!wrap) return;
+  const palette = ['#5DA9F0', '#7DBEF5', '#A5D3F8', '#4FA8F2', '#6AB2F4', '#8AC4F4', '#3D95E0', '#9BCDF7'];
+  const aspect = 16 / 9;
+  // Rings sit OUTSIDE the big orb (orb radius ≈ 0.14 + halo ≈ 0.20 of width)
+  const rings = [
+    { r: 0.21,  count: 18 },
+    { r: 0.235, count: 22 },
+    { r: 0.26,  count: 24 },
+    { r: 0.285, count: 26 }
+  ];
+  rings.forEach((ring, rIdx) => {
+    const offset = (rIdx % 2) * (Math.PI / ring.count);
+    for (let i = 0; i < ring.count; i++) {
+      const a = (i / ring.count) * 2 * Math.PI + offset;
+      const left = 50 + Math.cos(a) * ring.r * 100;
+      const top  = 50 + Math.sin(a) * ring.r * aspect * 100;
+      if (top < 3 || top > 97) continue;
+      const dot = document.createElement('div');
+      dot.className = 'glow-small';
+      const color = palette[(rIdx * 3 + i) % palette.length];
+      const enterDelay = 2.0 + rIdx * 0.4 + (i / ring.count) * 0.12;
+      // Stagger pulse phase so dots twinkle out of sync (deterministic per dot)
+      const pulseDelay = enterDelay + 0.5 + ((i * 0.31 + rIdx * 0.73) % 2.6);
+      dot.style.cssText =
+        'width:1%;left:' + left.toFixed(2) + '%;top:' + top.toFixed(2) +
+        '%;background:' + color +
+        ';box-shadow:0 0 5px ' + color + ',0 0 12px ' + color +
+        ';animation-delay:' + enterDelay.toFixed(2) + 's,' + pulseDelay.toFixed(2) + 's';
+      wrap.appendChild(dot);
+    }
+  });
+})();
+</script>
+</body>
+</html>
