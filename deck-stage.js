@@ -604,9 +604,14 @@
       }
       // Reserve room for the visual margin (top/bottom) and side gutters
       // where the always-visible nav arrows live, so the slide canvas never
-      // sits flush to the viewport edge or under the buttons.
-      const vw = Math.max(0, window.innerWidth - VIEWER_SIDE_GUTTER * 2);
-      const vh = Math.max(0, window.innerHeight - VIEWER_MARGIN * 2);
+      // sits flush to the viewport edge or under the buttons. On compact
+      // viewports the side nav is hidden (see `.sidenav` media query) and
+      // the gutters collapse so the slide can use the full screen width.
+      const compact = window.innerWidth < 768;
+      const sideGutter = compact ? 8 : VIEWER_SIDE_GUTTER;
+      const margin = compact ? 8 : VIEWER_MARGIN;
+      const vw = Math.max(0, window.innerWidth - sideGutter * 2);
+      const vh = Math.max(0, window.innerHeight - margin * 2);
       const s = Math.min(vw / this.designWidth, vh / this.designHeight);
       this._canvas.style.transform = `scale(${s})`;
     }
