@@ -43,6 +43,7 @@ function signSession(user) {
       name: user.name || '',
       industry: user.industry || '',
       cp: user.casePriorities || {},
+      ch: user.caseHidden || [],
     },
     process.env.JWT_SECRET,
     { expiresIn: `${SESSION_DAYS}d` }
@@ -50,7 +51,6 @@ function signSession(user) {
 }
 
 const DECK_PATH = path.join(__dirname, 'views', 'deck.html');
-const DEFAULT_INDUSTRY = 'food';
 let deckTemplateCache = null;
 async function getDeckTemplate() {
   if (deckTemplateCache) return deckTemplateCache;
@@ -64,10 +64,11 @@ function escapeHtml(s) {
 }
 
 // Reorder the five case-study sections inside the deck HTML according to the
-// per-user priorities in the session. Cases with a priority come first,
-// sorted ascending; cases without a priority keep their original order at
-// the end. The region is identified by its leading and trailing comments
-// (kept stable in deck.html on purpose).
+// per-user priorities in the session. Cases listed in `hidden` are dropped
+// entirely; of the rest, cases with a priority come first, sorted ascending,
+// and cases without a priority keep their original order at the end. The
+// region is identified by its leading and trailing comments (kept stable in
+// deck.html on purpose).
 const CASE_NAME_TO_KEY = {
   'Luxardo': 'luxardo',
   'Pasticceria Giotto': 'giotto',
@@ -78,7 +79,7 @@ const CASE_NAME_TO_KEY = {
 const CASE_REGION_START = '  <!-- 10 · Case Study · Luxardo -->';
 const CASE_REGION_END   = "  <!-- 14 · Statement · Let's dive in -->";
 
-function reorderCaseStudies(html, priorities = {}) {
+function reorderCaseStudies(html, priorities = {}, hidden = []) {
   const si = html.indexOf(CASE_REGION_START);
   const ei = html.indexOf(CASE_REGION_END);
   if (si === -1 || ei === -1 || ei <= si) return html;
@@ -86,13 +87,14 @@ function reorderCaseStudies(html, priorities = {}) {
   const parts = region.split(/(?=  <!-- \d+ · Case Study · )/).filter((p) => p.trim());
   if (parts.length === 0) return html;
 
+  const hiddenSet = new Set(hidden);
   const blocks = parts.map((block, originalIdx) => {
     const m = block.match(/<!-- \d+ · Case Study · ([^\n]+?) -->/);
     const key = m ? CASE_NAME_TO_KEY[m[1].trim()] : null;
     const p = key ? priorities[key] : undefined;
     const priority = (typeof p === 'number' && Number.isFinite(p) && p > 0) ? p : null;
-    return { block, originalIdx, priority };
-  });
+    return { block, originalIdx, priority, key };
+  }).filter((b) => !(b.key && hiddenSet.has(b.key)));
 
   blocks.sort((a, b) => {
     if (a.priority != null && b.priority != null) {
@@ -146,9 +148,15 @@ app.get('/deck', async (req, res) => {
   if (!session) return res.redirect('/');
   try {
     const tmpl = await getDeckTemplate();
-    const industry = escapeHtml((session.industry || '').trim() || DEFAULT_INDUSTRY);
-    let html = tmpl.replaceAll('{{INDUSTRY}}', industry);
-    html = reorderCaseStudies(html, session.cp || {});
+    // Slide 18 reads "We track <phrase> closely." With an industry set it's
+    // "the <industry> industry" (industry name emphasized); when empty it
+    // falls back to a generic "your industry".
+    const rawIndustry = (session.industry || '').trim();
+    const industryPhrase = rawIndustry
+      ? `<span style="font-weight: 300;">the</span> ${escapeHtml(rawIndustry)} industry`
+      : 'your industry';
+    let html = tmpl.replaceAll('{{INDUSTRY_PHRASE}}', industryPhrase);
+    html = reorderCaseStudies(html, session.cp || {}, session.ch || []);
     res.set('Cache-Control', 'no-store');
     res.type('html').send(html);
   } catch (err) {

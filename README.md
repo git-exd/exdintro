@@ -70,15 +70,18 @@ Only `email` and `password` are required.
 
 - `name`, `company` — appear in the notification email.
 - `industry` — personalizes slide 18 ("We track the *banking* industry
-  closely."). When empty, falls back to `food`. Accepted column names:
-  `industry`, `industria`, `settore`.
+  closely."). When empty, the slide reads the generic "We track *your*
+  industry closely." Accepted column names: `industry`, `industria`,
+  `settore`.
 - **Case priority columns** (one per case study) — each cell is a positive
   integer. Lower numbers come first. Empty cells leave the case in its
-  default position at the end. Accepted column names (case-insensitive):
-  `Luxardo`, `Pasticceria Giotto` (or `Giotto`), `DAB Pumps` (or `DAB`),
-  `vVardis`, `Crédit Agricole` (or `Credit Agricole`). In the example
-  above Alice sees: **DAB Pumps → Crédit Agricole → Luxardo → Pasticceria
-  Giotto → vVardis** (the last two keep their default order at the end).
+  default position at the end. Writing `hide` (case-insensitive) in a cell
+  removes that case-study slide entirely for the user. Accepted column names
+  (case-insensitive): `Luxardo`, `Pasticceria Giotto` (or `Giotto`),
+  `DAB Pumps` (or `DAB`), `vVardis`, `Crédit Agricole` (or `Credit Agricole`).
+  In the example above Alice sees: **DAB Pumps → Crédit Agricole → Luxardo →
+  Pasticceria Giotto → vVardis** (the last two keep their default order at the
+  end).
 
 ### 2. Publish the sheet as CSV
 
