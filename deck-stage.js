@@ -359,6 +359,9 @@
       this._onMouseMove = this._onMouseMove.bind(this);
       this._onTapBack = this._onTapBack.bind(this);
       this._onTapForward = this._onTapForward.bind(this);
+      this._onBeforePrint = this._freezeAnimations.bind(this);
+      this._onAfterPrint = this._unfreezeAnimations.bind(this);
+      this._frozenEls = null;
     }
 
     get designWidth() {
@@ -375,6 +378,8 @@
       window.addEventListener('keydown', this._onKey);
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      window.addEventListener('beforeprint', this._onBeforePrint);
+      window.addEventListener('afterprint', this._onAfterPrint);
       // Initial collection + layout happens via slotchange, which fires on mount.
       this._maybeShowRotateHint();
     }
@@ -383,8 +388,42 @@
       window.removeEventListener('keydown', this._onKey);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('mousemove', this._onMouseMove);
+      window.removeEventListener('beforeprint', this._onBeforePrint);
+      window.removeEventListener('afterprint', this._onAfterPrint);
       if (this._hideTimer) clearTimeout(this._hideTimer);
       if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+    }
+
+    // Print/PDF — freeze every running CSS animation at the midpoint of its
+    // cycle by giving it a negative delay equal to half its duration and
+    // pausing it. The browser's print engine reads the resulting frozen
+    // state. Restored on `afterprint`. We only touch elements that actually
+    // have a non-zero animation, to keep the walk cheap.
+    _freezeAnimations() {
+      this._frozenEls = [];
+      const all = this.ownerDocument.querySelectorAll('*');
+      for (const el of all) {
+        const cs = getComputedStyle(el);
+        if (!cs.animationName || cs.animationName === 'none') continue;
+        const durations = cs.animationDuration.split(',').map((s) => parseFloat(s) || 0);
+        if (durations.every((d) => d === 0)) continue;
+        this._frozenEls.push({
+          el,
+          prevDelay: el.style.animationDelay,
+          prevPlayState: el.style.animationPlayState,
+        });
+        el.style.animationDelay = durations.map((d) => `${(-d / 2).toFixed(3)}s`).join(',');
+        el.style.animationPlayState = 'paused';
+      }
+    }
+
+    _unfreezeAnimations() {
+      if (!this._frozenEls) return;
+      for (const { el, prevDelay, prevPlayState } of this._frozenEls) {
+        el.style.animationDelay = prevDelay;
+        el.style.animationPlayState = prevPlayState;
+      }
+      this._frozenEls = null;
     }
 
     attributeChangedCallback() {
@@ -449,11 +488,15 @@
         </button>
         <span class="divider"></span>
         <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
+        <button class="btn pdf" type="button" aria-label="Download as PDF" title="Download as PDF">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M5 7l3 3 3-3"/><path d="M3 13h10"/></svg>
+        </button>
       `;
 
       overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
       overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
       overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+      overlay.querySelector('.pdf').addEventListener('click', () => window.print());
 
       // Persistent side navigation arrows (visible by default on desktop).
       const navPrev = document.createElement('button');
