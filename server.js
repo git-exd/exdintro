@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import path from 'node:path';
+import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cookieParser from 'cookie-parser';
@@ -37,9 +38,23 @@ app.get('/deck-stage.js', (req, res) => {
 
 function signSession(user) {
   return jwt.sign(
-    { sub: user.email, name: user.name || '' },
+    { sub: user.email, name: user.name || '', industry: user.industry || '' },
     process.env.JWT_SECRET,
     { expiresIn: `${SESSION_DAYS}d` }
+  );
+}
+
+const DECK_PATH = path.join(__dirname, 'views', 'deck.html');
+const DEFAULT_INDUSTRY = 'food';
+let deckTemplateCache = null;
+async function getDeckTemplate() {
+  if (deckTemplateCache) return deckTemplateCache;
+  deckTemplateCache = await fs.readFile(DECK_PATH, 'utf8');
+  return deckTemplateCache;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
 }
 
@@ -78,10 +93,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
-app.get('/deck', (req, res) => {
-  if (!verifySession(req)) return res.redirect('/');
-  res.set('Cache-Control', 'no-store');
-  res.sendFile(path.join(__dirname, 'views', 'deck.html'));
+app.get('/deck', async (req, res) => {
+  const session = verifySession(req);
+  if (!session) return res.redirect('/');
+  try {
+    const tmpl = await getDeckTemplate();
+    const industry = escapeHtml((session.industry || '').trim() || DEFAULT_INDUSTRY);
+    const html = tmpl.replaceAll('{{INDUSTRY}}', industry);
+    res.set('Cache-Control', 'no-store');
+    res.type('html').send(html);
+  } catch (err) {
+    console.error('deck render error:', err);
+    res.status(500).type('text').send('Internal error');
+  }
 });
 
 app.post('/api/login', loginLimiter, async (req, res) => {

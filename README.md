@@ -57,12 +57,16 @@ Only `/deck` is gated. The brand assets are not sensitive.
 Create a sheet with a tab named **`Users`**. Row 1 is the header; the loader
 matches columns by name (case-insensitive).
 
-| email             | password        | name        | company    |
-| ----------------- | --------------- | ----------- | ---------- |
-| alice@example.com | a-shared-string | Alice Rossi | Example Co |
+| email             | password        | name        | company    | industry |
+| ----------------- | --------------- | ----------- | ---------- | -------- |
+| alice@example.com | a-shared-string | Alice Rossi | Example Co | banking  |
 
-Only `email` and `password` are required; `name` and `company` are optional and
-appear in the notification email.
+Only `email` and `password` are required.
+
+- `name`, `company` — appear in the notification email.
+- `industry` — personalizes slide 18 ("We track the *banking* industry
+  closely."). When empty, falls back to `food`. Accepted column names:
+  `industry`, `industria`, `settore`.
 
 ### 2. Publish the sheet as CSV
 
