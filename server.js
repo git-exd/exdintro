@@ -29,7 +29,11 @@ app.use(cookieParser());
 // Public static assets: brand CSS, fonts, images, deck-stage runtime.
 // These are not sensitive — only the deck markup (views/deck.html) is gated.
 app.use('/exd', express.static(path.join(__dirname, 'exd'), { maxAge: '7d' }));
-app.use('/deck-stage.js', express.static(path.join(__dirname, 'deck-stage.js'), { maxAge: '7d' }));
+app.get('/deck-stage.js', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=604800');
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'deck-stage.js'));
+});
 
 function signSession(user) {
   return jwt.sign(
