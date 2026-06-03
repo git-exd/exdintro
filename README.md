@@ -57,9 +57,9 @@ Only `/deck` is gated. The brand assets are not sensitive.
 Create a sheet with a tab named **`Users`**. Row 1 is the header; the loader
 matches columns by name (case-insensitive).
 
-| email             | password        | name        | company    | industry |
-| ----------------- | --------------- | ----------- | ---------- | -------- |
-| alice@example.com | a-shared-string | Alice Rossi | Example Co | banking  |
+| email             | password        | name        | company    | industry | Luxardo | Pasticceria Giotto | DAB Pumps | vVardis | Crédit Agricole |
+| ----------------- | --------------- | ----------- | ---------- | -------- | ------- | ------------------ | --------- | ------- | --------------- |
+| alice@example.com | a-shared-string | Alice Rossi | Example Co | banking  | 3       |                    | 1         |         | 2               |
 
 Only `email` and `password` are required.
 
@@ -67,6 +67,13 @@ Only `email` and `password` are required.
 - `industry` — personalizes slide 18 ("We track the *banking* industry
   closely."). When empty, falls back to `food`. Accepted column names:
   `industry`, `industria`, `settore`.
+- **Case priority columns** (one per case study) — each cell is a positive
+  integer. Lower numbers come first. Empty cells leave the case in its
+  default position at the end. Accepted column names (case-insensitive):
+  `Luxardo`, `Pasticceria Giotto` (or `Giotto`), `DAB Pumps` (or `DAB`),
+  `vVardis`, `Crédit Agricole` (or `Credit Agricole`). In the example
+  above Alice sees: **DAB Pumps → Crédit Agricole → Luxardo → Pasticceria
+  Giotto → vVardis** (the last two keep their default order at the end).
 
 ### 2. Publish the sheet as CSV
 

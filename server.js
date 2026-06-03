@@ -38,7 +38,12 @@ app.get('/deck-stage.js', (req, res) => {
 
 function signSession(user) {
   return jwt.sign(
-    { sub: user.email, name: user.name || '', industry: user.industry || '' },
+    {
+      sub: user.email,
+      name: user.name || '',
+      industry: user.industry || '',
+      cp: user.casePriorities || {},
+    },
     process.env.JWT_SECRET,
     { expiresIn: `${SESSION_DAYS}d` }
   );
@@ -56,6 +61,49 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
   );
+}
+
+// Reorder the five case-study sections inside the deck HTML according to the
+// per-user priorities in the session. Cases with a priority come first,
+// sorted ascending; cases without a priority keep their original order at
+// the end. The region is identified by its leading and trailing comments
+// (kept stable in deck.html on purpose).
+const CASE_NAME_TO_KEY = {
+  'Luxardo': 'luxardo',
+  'Pasticceria Giotto': 'giotto',
+  'DAB Pumps': 'dab',
+  'vVardis': 'vvardis',
+  'Crédit Agricole': 'credit_agricole',
+};
+const CASE_REGION_START = '  <!-- 10 · Case Study · Luxardo -->';
+const CASE_REGION_END   = "  <!-- 14 · Statement · Let's dive in -->";
+
+function reorderCaseStudies(html, priorities = {}) {
+  const si = html.indexOf(CASE_REGION_START);
+  const ei = html.indexOf(CASE_REGION_END);
+  if (si === -1 || ei === -1 || ei <= si) return html;
+  const region = html.slice(si, ei);
+  const parts = region.split(/(?=  <!-- \d+ · Case Study · )/).filter((p) => p.trim());
+  if (parts.length === 0) return html;
+
+  const blocks = parts.map((block, originalIdx) => {
+    const m = block.match(/<!-- \d+ · Case Study · ([^\n]+?) -->/);
+    const key = m ? CASE_NAME_TO_KEY[m[1].trim()] : null;
+    const p = key ? priorities[key] : undefined;
+    const priority = (typeof p === 'number' && Number.isFinite(p) && p > 0) ? p : null;
+    return { block, originalIdx, priority };
+  });
+
+  blocks.sort((a, b) => {
+    if (a.priority != null && b.priority != null) {
+      return a.priority - b.priority || a.originalIdx - b.originalIdx;
+    }
+    if (a.priority != null) return -1;
+    if (b.priority != null) return 1;
+    return a.originalIdx - b.originalIdx;
+  });
+
+  return html.slice(0, si) + blocks.map((b) => b.block).join('') + html.slice(ei);
 }
 
 function verifySession(req) {
@@ -99,7 +147,8 @@ app.get('/deck', async (req, res) => {
   try {
     const tmpl = await getDeckTemplate();
     const industry = escapeHtml((session.industry || '').trim() || DEFAULT_INDUSTRY);
-    const html = tmpl.replaceAll('{{INDUSTRY}}', industry);
+    let html = tmpl.replaceAll('{{INDUSTRY}}', industry);
+    html = reorderCaseStudies(html, session.cp || {});
     res.set('Cache-Control', 'no-store');
     res.type('html').send(html);
   } catch (err) {
