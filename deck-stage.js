@@ -11,9 +11,6 @@
  *      scaled with `transform: scale()` to fit the viewport, letterboxed.
  *      Set the `noscale` attribute to render at authored size (1:1) — the
  *      PPTX exporter sets this so its DOM capture sees unscaled geometry.
- *  (f) print — `@media print` lays every slide out as its own page at the
- *      design size, so the browser's Print → Save as PDF produces a clean
- *      one-page-per-slide PDF with no extra setup.
  *
  * Slides are HIDDEN, not unmounted. Non-active slides stay in the DOM with
  * `visibility: hidden` + `opacity: 0`, so their state (videos, iframes,
@@ -295,50 +292,6 @@
       background: rgba(255,255,255,0.18);
       margin: 0 2px;
     }
-
-    /* ── Print: one page per slide, no chrome ────────────────────────────
-       The screen layout stacks every slide at inset:0 inside a scaled
-       canvas; for print we want them in document flow at the authored
-       design size so the browser paginates one slide per sheet. The
-       @page size is set from the width/height attributes via the inline
-       <style id="deck-stage-print-page"> that connectedCallback injects
-       into <head> (the @page at-rule has no effect inside shadow DOM). */
-    @media print {
-      :host {
-        position: static;
-        inset: auto;
-        background: none;
-        overflow: visible;
-        color: inherit;
-      }
-      .stage { position: static; display: block; }
-      .canvas {
-        transform: none !important;
-        width: auto !important;
-        height: auto !important;
-        background: none;
-        will-change: auto;
-      }
-      ::slotted(*) {
-        position: relative !important;
-        inset: auto !important;
-        width: var(--deck-design-w) !important;
-        height: var(--deck-design-h) !important;
-        box-sizing: border-box !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        pointer-events: auto;
-        break-after: page;
-        page-break-after: always;
-        break-inside: avoid;
-        overflow: hidden;
-      }
-      ::slotted(*:last-child) {
-        break-after: auto;
-        page-break-after: auto;
-      }
-      .overlay, .tapzones, .sidenav { display: none !important; }
-    }
   `;
 
   class DeckStage extends HTMLElement {
@@ -359,9 +312,6 @@
       this._onMouseMove = this._onMouseMove.bind(this);
       this._onTapBack = this._onTapBack.bind(this);
       this._onTapForward = this._onTapForward.bind(this);
-      this._onBeforePrint = this._freezeAnimations.bind(this);
-      this._onAfterPrint = this._unfreezeAnimations.bind(this);
-      this._frozenEls = null;
     }
 
     get designWidth() {
@@ -374,12 +324,9 @@
     connectedCallback() {
       this._render();
       this._loadNotes();
-      this._syncPrintPageRule();
       window.addEventListener('keydown', this._onKey);
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
-      window.addEventListener('beforeprint', this._onBeforePrint);
-      window.addEventListener('afterprint', this._onAfterPrint);
       // Initial collection + layout happens via slotchange, which fires on mount.
       this._maybeShowRotateHint();
     }
@@ -388,87 +335,15 @@
       window.removeEventListener('keydown', this._onKey);
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('mousemove', this._onMouseMove);
-      window.removeEventListener('beforeprint', this._onBeforePrint);
-      window.removeEventListener('afterprint', this._onAfterPrint);
       if (this._hideTimer) clearTimeout(this._hideTimer);
       if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
-    }
-
-    // Print/PDF — freeze every running CSS animation at the midpoint of its
-    // cycle by giving it a negative delay equal to half its duration and
-    // pausing it. The browser's print engine reads the resulting frozen
-    // state. Restored on `afterprint`. We only touch elements that actually
-    // have a non-zero animation, to keep the walk cheap.
-    _freezeAnimations() {
-      this._frozenEls = [];
-      const all = this.ownerDocument.querySelectorAll('*');
-      for (const el of all) {
-        const cs = getComputedStyle(el);
-        if (!cs.animationName || cs.animationName === 'none') continue;
-        const durations = cs.animationDuration.split(',').map((s) => parseFloat(s) || 0);
-        if (durations.every((d) => d === 0)) continue;
-        this._frozenEls.push({
-          el,
-          prevDelay: el.style.animationDelay,
-          prevPlayState: el.style.animationPlayState,
-        });
-        el.style.animationDelay = durations.map((d) => `${(-d / 2).toFixed(3)}s`).join(',');
-        el.style.animationPlayState = 'paused';
-      }
-    }
-
-    _unfreezeAnimations() {
-      if (!this._frozenEls) return;
-      for (const { el, prevDelay, prevPlayState } of this._frozenEls) {
-        el.style.animationDelay = prevDelay;
-        el.style.animationPlayState = prevPlayState;
-      }
-      this._frozenEls = null;
-    }
-
-    // Download a server-rendered PDF (Puppeteer behind /api/pdf). The button
-    // shows a brief disabled state during the round-trip; on Railway the
-    // first request can take 3-5s while Chromium boots, subsequent ones are
-    // ~2s.
-    async _downloadPdf(btn) {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      const originalTitle = btn.title;
-      btn.title = 'Generating PDF…';
-      btn.style.opacity = '0.55';
-      try {
-        const res = await fetch('/api/pdf', { credentials: 'include' });
-        if (!res.ok) {
-          const msg = await res.text().catch(() => '');
-          throw new Error(msg || `HTTP ${res.status}`);
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'exd-intro.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      } catch (err) {
-        console.error('PDF download failed:', err);
-        alert('Could not generate the PDF: ' + (err.message || err));
-      } finally {
-        btn.disabled = false;
-        btn.style.opacity = '';
-        btn.title = originalTitle;
-      }
     }
 
     attributeChangedCallback() {
       if (this._canvas) {
         this._canvas.style.width = this.designWidth + 'px';
         this._canvas.style.height = this.designHeight + 'px';
-        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
-        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
         this._fit();
-        this._syncPrintPageRule();
       }
     }
 
@@ -483,8 +358,6 @@
       canvas.className = 'canvas';
       canvas.style.width = this.designWidth + 'px';
       canvas.style.height = this.designHeight + 'px';
-      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
-      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
 
       const slot = document.createElement('slot');
       slot.addEventListener('slotchange', this._onSlotChange);
@@ -523,15 +396,11 @@
         </button>
         <span class="divider"></span>
         <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
-        <button class="btn pdf" type="button" aria-label="Download as PDF" title="Download as PDF">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M5 7l3 3 3-3"/><path d="M3 13h10"/></svg>
-        </button>
       `;
 
       overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
       overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
       overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
-      overlay.querySelector('.pdf').addEventListener('click', (e) => this._downloadPdf(e.currentTarget));
 
       // Persistent side navigation arrows (visible by default on desktop).
       const navPrev = document.createElement('button');
@@ -583,24 +452,6 @@
           if (this._rotateHint) this._rotateHint.removeAttribute('data-visible');
         }, 3200);
       });
-    }
-
-    /** @page must live in the document stylesheet — it's a no-op inside
-     *  shadow DOM. Inject/update a single <head> style tag so the print
-     *  sheet matches the design size and Save-as-PDF yields one slide per
-     *  page with no margins. */
-    _syncPrintPageRule() {
-      const id = 'deck-stage-print-page';
-      let tag = document.getElementById(id);
-      if (!tag) {
-        tag = document.createElement('style');
-        tag.id = id;
-        document.head.appendChild(tag);
-      }
-      tag.textContent =
-        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
-        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
-        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
     }
 
     _onSlotChange() {
