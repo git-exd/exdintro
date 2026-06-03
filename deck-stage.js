@@ -426,6 +426,41 @@
       this._frozenEls = null;
     }
 
+    // Download a server-rendered PDF (Puppeteer behind /api/pdf). The button
+    // shows a brief disabled state during the round-trip; on Railway the
+    // first request can take 3-5s while Chromium boots, subsequent ones are
+    // ~2s.
+    async _downloadPdf(btn) {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const originalTitle = btn.title;
+      btn.title = 'Generating PDF…';
+      btn.style.opacity = '0.55';
+      try {
+        const res = await fetch('/api/pdf', { credentials: 'include' });
+        if (!res.ok) {
+          const msg = await res.text().catch(() => '');
+          throw new Error(msg || `HTTP ${res.status}`);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'exd-intro.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error('PDF download failed:', err);
+        alert('Could not generate the PDF: ' + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.title = originalTitle;
+      }
+    }
+
     attributeChangedCallback() {
       if (this._canvas) {
         this._canvas.style.width = this.designWidth + 'px';
@@ -496,7 +531,7 @@
       overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
       overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
       overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
-      overlay.querySelector('.pdf').addEventListener('click', () => window.print());
+      overlay.querySelector('.pdf').addEventListener('click', (e) => this._downloadPdf(e.currentTarget));
 
       // Persistent side navigation arrows (visible by default on desktop).
       const navPrev = document.createElement('button');

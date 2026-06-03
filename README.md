@@ -10,6 +10,7 @@ notification.
 - Google Sheet *published as CSV* (no Google Cloud, no API key) for credentials
 - Google Apps Script web app bound to the same sheet for writing last-login
 - JWT session cookie (httpOnly, signed)
+- Puppeteer (headless Chromium) for server-side PDF export
 - Deployed on Railway
 
 > ⚠️ The published CSV URL is **publicly readable to anyone who knows it**. Keep
@@ -44,6 +45,7 @@ exdintro/
 | POST   | `/api/login`     | —    | Validate, set session cookie, send notification email  |
 | POST   | `/api/logout`    | —    | Clear session cookie                                   |
 | GET    | `/deck`          | yes  | Serve the deck HTML                                    |
+| GET    | `/api/pdf`       | yes  | Render the deck to PDF via Puppeteer, stream download  |
 | GET    | `/exd/*`         | —    | Brand assets (public)                                  |
 | GET    | `/deck-stage.js` | —    | Deck-stage runtime (public)                            |
 | GET    | `/healthz`       | —    | Liveness probe for Railway                             |
@@ -215,7 +217,17 @@ Open <http://localhost:3000/>.
 `→` / `Space` / `PageDown` — next · `←` / `PageUp` — previous ·
 `Home` / `End` — first / last · `R` — reset · `1`–`9` — jump to slide
 
-## Print to PDF
+## Download to PDF
 
-Browser **Print → Save as PDF**. The `<deck-stage>` component lays out each
-slide as a full page at 1920×1080.
+The download icon in the bottom overlay calls `/api/pdf`, which runs the
+deck through a headless Chromium on the server and streams back a PDF
+sized exactly to 1920×1080 per slide. The animated orbs and gradient meshes
+are frozen at the midpoint of their cycle so the snapshot is visually rich
+rather than catching them at the boring 0%/100% rest state.
+
+First PDF after a long idle takes ~5s (Chromium boots); subsequent ones
+~2s. The browser instance is kept alive across requests.
+
+The keyboard shortcut (`Cmd+P` / `Ctrl+P`) still triggers the browser's
+own print dialog as a fallback — useful if the server is overloaded or
+unreachable — but the result depends on the user's print settings.

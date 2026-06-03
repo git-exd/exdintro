@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import puppeteer from 'puppeteer';
 
 import { findUser } from './lib/sheets.js';
 import { logLastAccess } from './lib/access-log.js';
@@ -184,6 +185,93 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 app.post('/api/logout', (req, res) => {
   clearSessionCookie(res);
   res.json({ ok: true });
+});
+
+// Lazily-launched shared Puppeteer instance. Kept around so subsequent PDFs
+// don't pay the cold-start cost (~1s for Chromium boot). Each request still
+// opens its own page so they're isolated.
+let _pdfBrowser = null;
+async function getPdfBrowser() {
+  if (_pdfBrowser && _pdfBrowser.connected) return _pdfBrowser;
+  _pdfBrowser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+    ],
+  });
+  return _pdfBrowser;
+}
+
+function rewriteAssetPaths(html, baseUrl) {
+  return html
+    .replaceAll('href="/exd/', `href="${baseUrl}/exd/`)
+    .replaceAll('src="/exd/',  `src="${baseUrl}/exd/`)
+    .replaceAll('src="/deck-stage.js"', `src="${baseUrl}/deck-stage.js"`)
+    .replaceAll("url('/exd/", `url('${baseUrl}/exd/`)
+    .replaceAll('url("/exd/', `url("${baseUrl}/exd/`)
+    .replaceAll('url(/exd/',  `url(${baseUrl}/exd/`);
+}
+
+app.get('/api/pdf', async (req, res) => {
+  const session = verifySession(req);
+  if (!session) return res.status(401).type('text').send('Unauthorized');
+
+  let page;
+  try {
+    const tmpl = await getDeckTemplate();
+    const industry = escapeHtml((session.industry || '').trim() || DEFAULT_INDUSTRY);
+    let html = tmpl.replaceAll('{{INDUSTRY}}', industry);
+    html = reorderCaseStudies(html, session.cp || {});
+
+    // Puppeteer renders setContent in a blank navigation context, so relative
+    // URLs would 404. Rewrite the static asset paths to absolute URLs of this
+    // same server, so Chromium fetches them over HTTP from us.
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    html = rewriteAssetPaths(html, baseUrl);
+
+    const browser = await getPdfBrowser();
+    page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+
+    // Freeze every running CSS animation at half its cycle so the PDF
+    // captures the visually rich midpoint (orbs spread out, gradients drifted)
+    // rather than the 0%/100% rest state.
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll('*')) {
+        const cs = getComputedStyle(el);
+        if (!cs.animationName || cs.animationName === 'none') continue;
+        const durations = cs.animationDuration.split(',').map((s) => parseFloat(s) || 0);
+        if (durations.every((d) => d === 0)) continue;
+        el.style.animationDelay = durations.map((d) => `${(-d / 2).toFixed(3)}s`).join(',');
+        el.style.animationPlayState = 'paused';
+      }
+    });
+    // Give the JS-driven particle generators (slides 6/8) a moment to spawn
+    // their dots after the freeze takes effect.
+    await new Promise((r) => setTimeout(r, 400));
+
+    const pdfBuffer = await page.pdf({
+      width: '1920px',
+      height: '1080px',
+      printBackground: true,
+      preferCSSPageSize: false,
+      margin: { top: 0, bottom: 0, left: 0, right: 0 },
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="exd-intro.pdf"');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(Buffer.from(pdfBuffer));
+  } catch (err) {
+    console.error('pdf render error:', err);
+    res.status(500).type('text').send('PDF generation failed: ' + err.message);
+  } finally {
+    if (page) page.close().catch(() => {});
+  }
 });
 
 app.get('/healthz', (req, res) => res.type('text').send('ok'));
