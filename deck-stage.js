@@ -167,6 +167,37 @@
       .tapzones { display: none; }
     }
 
+    /* One-shot hint shown on portrait mobile to suggest landscape. JS sets
+       data-visible briefly on first load; CSS handles the fade. */
+    .rotate-hint {
+      position: fixed;
+      left: 50%;
+      bottom: max(28px, env(safe-area-inset-bottom, 0px));
+      transform: translate(-50%, 8px);
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.78);
+      color: rgba(255,255,255,0.92);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 360ms ease, transform 360ms cubic-bezier(.2,.8,.2,1);
+      z-index: 2147483500;
+      user-select: none;
+      display: none;
+    }
+    .rotate-hint[data-visible] {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    @media (orientation: portrait) and (max-width: 768px) and (pointer: coarse) {
+      .rotate-hint { display: block; }
+    }
+
     .overlay {
       position: fixed;
       left: 50%;
@@ -345,6 +376,7 @@
       window.addEventListener('resize', this._onResize);
       window.addEventListener('mousemove', this._onMouseMove, { passive: true });
       // Initial collection + layout happens via slotchange, which fires on mount.
+      this._maybeShowRotateHint();
     }
 
     disconnectedCallback() {
@@ -442,14 +474,37 @@
       navNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
       navNext.addEventListener('click', () => this._go(this._index + 1, 'click'));
 
-      this._root.append(style, stage, tapzones, navPrev, navNext, overlay);
+      const rotateHint = document.createElement('div');
+      rotateHint.className = 'rotate-hint export-hidden';
+      rotateHint.setAttribute('data-noncommentable', '');
+      rotateHint.textContent = 'Ruota in landscape per una vista ottimale';
+
+      this._root.append(style, stage, tapzones, navPrev, navNext, overlay, rotateHint);
       this._canvas = canvas;
       this._slot = slot;
       this._overlay = overlay;
       this._navPrev = navPrev;
       this._navNext = navNext;
+      this._rotateHint = rotateHint;
       this._countEl = overlay.querySelector('.current');
       this._totalEl = overlay.querySelector('.total');
+    }
+
+    _maybeShowRotateHint() {
+      if (!this._rotateHint) return;
+      // One-shot per page load: don't reshow if already dismissed/expired.
+      if (this._rotateHintShown) return;
+      // Only the matching media query renders the element; skip otherwise.
+      const cs = window.getComputedStyle(this._rotateHint);
+      if (cs.display === 'none') return;
+      this._rotateHintShown = true;
+      // Defer one frame so the transition runs from the initial state.
+      requestAnimationFrame(() => {
+        this._rotateHint.setAttribute('data-visible', '');
+        setTimeout(() => {
+          if (this._rotateHint) this._rotateHint.removeAttribute('data-visible');
+        }, 3200);
+      });
     }
 
     /** @page must live in the document stylesheet — it's a no-op inside
