@@ -7,8 +7,8 @@ notification.
 ## Stack
 
 - Node.js 20 + Express
-- Google Sheet *published as CSV* (no Google Cloud, no API key)
-- Resend for email
+- Google Sheet *published as CSV* (no Google Cloud, no API key) for credentials
+- Google Apps Script web app bound to the same sheet for writing last-login
 - JWT session cookie (httpOnly, signed)
 - Deployed on Railway
 
@@ -50,6 +50,11 @@ exdintro/
 
 Only `/deck` is gated. The brand assets are not sensitive.
 
+On `/api/login` success the server also POSTs to the Apps Script web app
+(see "Last-login logging") to stamp the user's `Last login` cell in the
+sheet. The call is fire-and-forget — a webhook failure logs but never
+blocks the login.
+
 ## Setup
 
 ### 1. Google Sheet
@@ -89,13 +94,89 @@ itself can stay restricted to you, while the published copy is publicly readable
 
 The server caches the CSV for 60 seconds, so changes propagate within a minute.
 
-### 3. Resend
+### 3. Last-login logging (Google Apps Script)
 
-1. Sign up at <https://resend.com/>.
-2. Add and verify the sending domain (e.g. `exdpeople.org`).
-3. Create an API key → `RESEND_API_KEY`.
-4. Set `NOTIFY_FROM` to a verified address on that domain, `NOTIFY_TO` to the
-   inbox that should receive the alerts.
+The server writes each successful login back to the sheet (column `Last
+login`, auto-created on first write) via an Apps Script web app bound to the
+sheet.
+
+**Set up the script**
+
+1. Open the credentials Google Sheet.
+2. **Extensions → Apps Script** → opens the script editor on a project bound
+   to the sheet.
+3. Replace the contents of `Code.gs` with:
+
+```javascript
+const SHEET_NAME = 'Users';
+const EMAIL_HEADER = 'email';
+const LAST_LOGIN_HEADER = 'Last login';
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents || '{}');
+    const token = PropertiesService.getScriptProperties().getProperty('LAST_LOGIN_TOKEN');
+    if (!token || body.token !== token) {
+      return jsonOut({ error: 'unauthorized' });
+    }
+    const email = String(body.email || '').trim().toLowerCase();
+    const timestamp = body.timestamp || new Date().toISOString();
+    if (!email) return jsonOut({ error: 'missing email' });
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) return jsonOut({ error: 'sheet not found: ' + SHEET_NAME });
+    const data = sheet.getDataRange().getValues();
+    if (data.length < 1) return jsonOut({ error: 'sheet is empty' });
+
+    const header = data[0].map(function (h) { return String(h).trim().toLowerCase(); });
+    const emailIdx = header.indexOf(EMAIL_HEADER.toLowerCase());
+    if (emailIdx === -1) return jsonOut({ error: 'email column not found' });
+    let lastIdx = header.indexOf(LAST_LOGIN_HEADER.toLowerCase());
+    if (lastIdx === -1) {
+      lastIdx = header.length;
+      sheet.getRange(1, lastIdx + 1).setValue(LAST_LOGIN_HEADER);
+    }
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][emailIdx] || '').trim().toLowerCase() === email) {
+        sheet.getRange(i + 1, lastIdx + 1).setValue(timestamp);
+        return jsonOut({ ok: true });
+      }
+    }
+    return jsonOut({ error: 'user not found: ' + email });
+  } catch (err) {
+    return jsonOut({ error: String(err && err.message || err) });
+  }
+}
+
+function jsonOut(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+4. **Project Settings** (the gear icon, left sidebar) → scroll to **Script
+   Properties** → **Add script property**. Name `LAST_LOGIN_TOKEN`, value a
+   random string (e.g. `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`).
+   Save.
+5. **Deploy → New deployment** → type **Web app**.
+   - Description: `last-login webhook`
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+   - Click **Deploy**, authorize when prompted, copy the **Web app URL**.
+
+**Wire it to the server**
+
+Set both variables in Railway (and `.env` locally if you test):
+
+- `LAST_LOGIN_WEBHOOK_URL` → the Web app URL from step 5.
+- `LAST_LOGIN_TOKEN` → the same token you put in script properties.
+
+Both empty → logging is disabled (the server prints a `[log] skipped` line
+in the console on every login and continues).
+
+> Note: if you later edit the script, you must **Deploy → Manage
+> deployments → edit → New version**. The URL stays the same.
 
 ### 4. Local dev
 

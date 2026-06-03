@@ -9,7 +9,7 @@ import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
 
 import { findUser } from './lib/sheets.js';
-import { notifyLogin } from './lib/email.js';
+import { logLastAccess } from './lib/access-log.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -170,12 +170,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
     setSessionCookie(res, signSession(user));
 
-    // Fire-and-forget notification: a mail failure must not block login.
-    notifyLogin({
-      user,
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    }).catch((err) => console.error('notifyLogin failed:', err.message));
+    // Fire-and-forget: a webhook failure must not block login.
+    logLastAccess({ user })
+      .catch((err) => console.error('logLastAccess failed:', err.message));
 
     res.json({ ok: true });
   } catch (err) {
