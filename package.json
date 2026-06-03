@@ -1,0 +1,23 @@
+{
+  "name": "exdintro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": ".exd introduction deck, gated behind a Google Sheets credential check with email notification.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "resend": "^4.0.1"
+  }
+}

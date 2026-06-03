@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>.exd — Sign in</title>
+<link rel="stylesheet" href="/exd/colors_and_type.css" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap" rel="stylesheet" />
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--exd-ink); font-family: var(--exd-sans); color: #fff; font-weight: 300; }
+  body { display: grid; place-items: center; padding: 24px; overflow: hidden; position: relative; isolation: isolate; }
+
+  .orb-stack { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .orb-piece { position: absolute; width: 760px; height: 760px; right: -260px; top: -240px; border-radius: 50%; filter: blur(64px); mix-blend-mode: screen; will-change: transform; }
+  .orb-piece.p1 { background: radial-gradient(circle at 50% 50%, #e9193e 0%, rgba(233,25,62,0.55) 38%, transparent 70%); animation: orb1 9s ease-in-out infinite; }
+  .orb-piece.p2 { background: radial-gradient(circle at 50% 50%, #8e2aa3 0%, rgba(107,31,122,0.6) 38%, transparent 72%); animation: orb2 11s ease-in-out infinite; }
+  .orb-piece.p3 { background: radial-gradient(circle at 50% 50%, #3a3aa8 0%, rgba(30,27,158,0.6) 38%, transparent 72%); animation: orb3 13s ease-in-out infinite; }
+  @keyframes orb1 { 0%,100% { transform: translate(0,0) scale(1); } 25% { transform: translate(160px,-120px) scale(1.25); } 50% { transform: translate(80px,200px) scale(0.75); } 75% { transform: translate(-140px,-60px) scale(1.15); } }
+  @keyframes orb2 { 0%,100% { transform: translate(0,0) scale(1.05); } 30% { transform: translate(-180px,140px) scale(0.7); } 60% { transform: translate(140px,-160px) scale(1.35); } }
+  @keyframes orb3 { 0%,100% { transform: translate(0,0) scale(0.95); } 35% { transform: translate(120px,200px) scale(1.4); } 70% { transform: translate(-180px,-120px) scale(0.8); } }
+
+  .top { position: fixed; top: 36px; left: 64px; right: 64px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+  .top img { height: 32px; }
+  .top .ref { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 500; }
+
+  .card { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 48px 44px; }
+  .eyebrow { font-size: 13px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--exd-accent-alt); margin: 0 0 16px; }
+  h1 { font-family: var(--exd-sans); font-weight: 700; font-size: 44px; line-height: 1.06; letter-spacing: -0.01em; margin: 0 0 12px; color: #fff; }
+  h1 .serif { font-family: var(--exd-serif); font-style: italic; font-weight: 400; color: rgba(255,255,255,0.7); }
+  p.lede { margin: 0 0 32px; font-size: 16px; line-height: 1.5; color: rgba(255,255,255,0.6); }
+
+  form { display: flex; flex-direction: column; gap: 14px; }
+  label { display: block; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 500; margin-bottom: 6px; }
+  input { width: 100%; padding: 14px 16px; font-size: 16px; font-family: inherit; font-weight: 400; color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: 14px; box-sizing: border-box; outline: none; transition: border-color 0.15s, background 0.15s; }
+  input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+
+  button { margin-top: 8px; padding: 16px 22px; font-size: 15px; font-weight: 500; font-family: inherit; color: #fff; background: var(--exd-accent-alt); border: 0; border-radius: 100px; cursor: pointer; transition: opacity 0.15s, transform 0.05s; }
+  button:hover { opacity: 0.92; }
+  button:active { transform: scale(0.99); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .msg { min-height: 22px; margin-top: 12px; font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.65); }
+  .msg.error { color: #ff9ab0; }
+
+  .bot { position: fixed; bottom: 36px; left: 64px; right: 64px; z-index: 2; display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    .top, .bot { left: 24px; right: 24px; }
+    .card { padding: 36px 28px; }
+    h1 { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+  <div class="orb-stack" aria-hidden="true">
+    <div class="orb-piece p3"></div>
+    <div class="orb-piece p2"></div>
+    <div class="orb-piece p1"></div>
+  </div>
+
+  <div class="top">
+    <img src="/exd/logo-exd-light.svg" alt=".exd" />
+    <span class="ref">Reserved deck</span>
+  </div>
+
+  <div class="card">
+    <p class="eyebrow">Sign in</p>
+    <h1>Welcome <span class="serif">to .exd</span></h1>
+    <p class="lede">Insert the credentials you received to access the deck.</p>
+
+    <form id="login" autocomplete="on" novalidate>
+      <div>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required placeholder="you@company.com" />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+      </div>
+      <button id="submit" type="submit">Enter</button>
+      <div class="msg" id="msg" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <div class="bot">
+    <span>exdpeople.org</span>
+    <span>Padova · Milano</span>
+  </div>
+
+<script>
+  const form = document.getElementById('login');
+  const btn = document.getElementById('submit');
+  const msg = document.getElementById('msg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = '';
+    msg.classList.remove('error');
+    btn.disabled = true;
+    const data = {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+    };
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) {
+        msg.textContent = 'Access granted. Opening the deck…';
+        window.location.href = '/deck';
+        return;
+      }
+      msg.textContent = body.error || 'Login failed. Please try again.';
+      msg.classList.add('error');
+    } catch (err) {
+      msg.textContent = 'Network error. Please try again.';
+      msg.classList.add('error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
