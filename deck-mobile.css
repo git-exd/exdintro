@@ -1,0 +1,243 @@
+/* deck-mobile.css — phones and tablets (html.m-light, set by deck-mobile-head.js).
+   The standard of git-exd/exd-presentazioni (shared/assets/offerta.css, October 2026):
+   · the light version: no grain, no blur or frosted glass, small still blobs, no will-change layers
+     (they are what keeps iOS from closing the page)
+   · portrait: one slide at a time, as large as the screen, the content reflowed in a column with readable text;
+     a slide taller than the screen scrolls inside; two large arrows at the bottom
+   · landscape: the desktop slide, scaled to the full screen, with the arrows */
+
+/* thumb arrows: only on touch screens */
+.thumbnav { display: none; }
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .thumbnav { display: block; }
+  .thumbnav button { position: fixed; z-index: 2147483000; bottom: 18vh; width: 52px; height: 52px; padding: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.28);
+    background: rgba(13,15,30,0.55); color: #fff; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s, background .15s; }
+  .thumbnav button:active { transform: scale(0.92); background: rgba(13,15,30,0.8); }
+  .thumbnav .tn-prev { left: max(12px, env(safe-area-inset-left)); }
+  .thumbnav .tn-next { right: max(12px, env(safe-area-inset-right)); }
+  .thumbnav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .thumbnav button:disabled { opacity: 0.3; }
+}
+@media print { .thumbnav { display: none !important; } }
+
+/* ── the light version (both orientations) ── */
+html.m-light *, html.m-light *::before, html.m-light *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.m-light deck-stage section::after { display: none !important; }                 /* grain */
+html.m-light .orb-piece { filter: none !important; will-change: auto !important; animation: none !important; }
+html.m-light .blobs i { filter: none !important; mix-blend-mode: normal !important; animation: none !important; will-change: auto !important; translate: none !important; }
+html.m-light .g-blob { filter: none !important; animation: none !important; }
+html.m-light .flowv .fs, html.m-light .wr-vis .fs { will-change: auto !important; }
+html.m-light .wr-vis::after { display: none !important; }
+html.m-light .wr-vis::before { animation: none !important; will-change: auto !important; }
+html.m-light .goals { will-change: auto !important; }
+/* the glass of slide 4 and the case tags, without frosted glass: a little more fill */
+html.m-light .s-design .vp { background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08)) !important; }
+html.m-light .s-case .cp-tags li { background: rgba(13, 15, 30, .55); }
+
+/* ════════ portrait: the slide reflows for the vertical screen ════════ */
+@media (orientation: portrait) {
+html.m-light { --pad-x: 22px; --pad-y: 56px; }
+html.m-light, html.m-light body { background: #0d0f1e; }
+html.m-light deck-stage > section { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+html.m-light deck-stage section { padding: 64px 22px 104px !important; }
+/* centred in height, but a content taller than the screen starts at the top (it scrolls) */
+html.m-light deck-stage section .frame, html.m-light deck-stage section .v2-frame { min-height: 100%; height: auto; display: flex; flex-direction: column; justify-content: flex-start; }
+html.m-light deck-stage section .frame::before, html.m-light deck-stage section .frame::after,
+html.m-light deck-stage section .v2-frame::before, html.m-light deck-stage section .v2-frame::after { content: ""; flex: 1 0 0; }
+/* dark slides with blobs that leave the edges on purpose: no scrolling */
+html.m-light deck-stage > section.s-cover, html.m-light deck-stage > section.s-section, html.m-light deck-stage > section.s-end { overflow: hidden !important; }
+
+/* arrows at the bottom, within reach of the thumb; on a scrolling slide their band takes the slide colour */
+html.m-light .thumbnav { display: block !important; }
+html.m-light .thumbnav .tn-bar { position: fixed; z-index: 2147482999; left: 0; right: 0; bottom: 0; height: calc(84px + env(safe-area-inset-bottom)); background: var(--tn-bg, transparent); pointer-events: none; }
+html.m-light .thumbnav button { position: fixed; z-index: 2147483000; bottom: max(14px, env(safe-area-inset-bottom)); width: 54px; height: 54px; padding: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(13,15,30,0.72); color: #fff; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+html.m-light .thumbnav button:active { transform: scale(0.92); }
+html.m-light .thumbnav .tn-prev { left: 16px; }
+html.m-light .thumbnav .tn-next { right: 16px; }
+html.m-light .thumbnav svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+html.m-light .thumbnav button:disabled { opacity: 0.3; }
+
+/* chrome and type */
+html.m-light .chrome .mark, html.m-light .v2-mark { top: 22px !important; left: 22px !important; height: 18px !important; }
+html.m-light .chrome .pgno { display: none; }
+html.m-light .eyebrow, html.m-light .v2 .eyebrow { font-size: 11px !important; letter-spacing: .1em; margin-bottom: 0; }
+html.m-light .eyebrow.sh { gap: 10px; }
+html.m-light .h-title, html.m-light .v2 .h-title { font-size: 34px !important; line-height: 1.06 !important; letter-spacing: -0.03em; margin-top: 12px !important; max-width: none !important; white-space: normal !important; }
+html.m-light .h-display { font-size: 44px !important; line-height: 1.02 !important; }
+html.m-light .body, html.m-light .v2 .body { font-size: 16px !important; line-height: 1.55 !important; max-width: none !important; }
+html.m-light .key { letter-spacing: -0.03em; }
+
+/* blobs: small and still */
+html.m-light .orb-stack { width: 560px !important; height: 560px !important; left: -140px !important; top: auto !important; bottom: -220px !important; margin: 0 !important; }
+html.m-light .orb-piece { width: 320px !important; height: 320px !important; top: 120px !important; left: 120px !important; }
+html.m-light .orb-piece.p2 { transform: translate(150px, -120px); }
+html.m-light .orb-piece.p3 { transform: translate(-60px, -40px); }
+html.m-light .blobs-hero .b1 { width: 520px; height: 520px; left: -60px; top: 120px; }
+html.m-light .blobs-hero .b2 { width: 440px; height: 440px; left: 80px; top: 420px; }
+html.m-light .blobs-hero .b3 { width: 340px; height: 340px; left: -120px; top: 480px; }
+html.m-light .blobs-hero .b4 { width: 260px; height: 260px; left: 220px; top: 40px; }
+html.m-light .blobs-dim .b1 { width: 420px; height: 420px; left: -200px; top: 30%; }
+html.m-light .blobs-dim .b2 { width: 360px; height: 360px; right: -160px; bottom: -6%; }
+
+/* 01 · cover: "hello" across the width, "we are .exd" under it */
+html.m-light .s-cover-intro .cover-logo { top: 22px; right: 22px; height: 18px; }
+html.m-light .s-cover-intro .intro-sub { left: 30px; top: calc(50% + 48px); width: auto; font-size: 13px; letter-spacing: .72em; }
+html.m-light .s-cover-intro .cover-labels { left: 22px; right: 22px; bottom: 104px; font-size: 10px; }
+
+/* 02 · who we are */
+html.m-light .s-about .frame { gap: 32px; padding-top: 0; }
+html.m-light .s-about .about-head { display: block; }
+html.m-light .s-about .about-intro { padding-top: 22px !important; }
+html.m-light .s-about .about-intro p { font-size: 17px !important; line-height: 1.5 !important; }
+html.m-light .s-about .about-intro p + p { margin-top: .8em !important; }
+html.m-light .s-about .marquee img { height: 30px; margin: 0 22px; max-width: 120px; }
+html.m-light .s-about .marquee img.logo-faint { height: 40px; }
+
+/* 03 · the problem */
+html.m-light .s-problem-line .frame { align-items: flex-start; text-align: left; }
+html.m-light .s-problem-line .h-title { font-size: 38px !important; }
+html.m-light .s-problem-line .body { margin-top: 16px !important; }
+html.m-light .s-problem-line .erratic { position: relative !important; left: auto !important; right: auto !important; bottom: auto !important; width: 100% !important; height: 170px !important; margin-top: 36px; overflow: visible; }
+/* the chart is stretched to the narrow screen (preserveAspectRatio none, deck-mobile.js): the line keeps its weight, the labels and dots go */
+html.m-light .s-problem-line .erratic .line, html.m-light .s-problem-line .erratic .area { vector-effect: non-scaling-stroke; }
+html.m-light .s-problem-line .erratic .pk { display: none; }
+
+/* 04 · growth can be a system: opening title, paragraph and the four tiles in a column */
+html.m-light .s-design[data-viz="fan"] .frame { align-items: flex-start; text-align: left; padding-top: 0 !important; }
+html.m-light .s-design .h-title { white-space: normal !important; }
+html.m-light .s-design[data-step] .t-lead { max-width: none !important; opacity: 1 !important; display: inline; }
+html.m-light .s-design[data-step] .t-tail { max-width: none !important; opacity: 1 !important; display: inline; }
+html.m-light .s-design[data-step] .design-cols { max-height: none !important; opacity: 1 !important; margin-top: 16px !important; }
+html.m-light .s-design[data-viz="fan"] .body { font-size: 16px !important; text-wrap: pretty; }
+html.m-light .s-design .vp-row { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+html.m-light .s-design .vp { padding: 16px 16px 18px; border-radius: 18px; animation: none !important; opacity: 1 !important; clip-path: none !important; transform: none !important; }
+html.m-light .s-design .vp h3 { font-size: 24px !important; }
+html.m-light .s-design .vp p { margin-top: 8px; font-size: 13px; line-height: 1.4; }
+html.m-light .s-design .vp::after { display: none; }
+
+/* 05 · what we do */
+html.m-light .s-what .what-body { display: block; margin-top: 18px; }
+html.m-light .s-what .what-intro { font-size: 16px; }
+html.m-light .s-what .what-cta { margin-top: 18px; gap: 8px; }
+html.m-light .s-what .btn { --h: 44px; padding: 0 18px; font-size: 14px; }
+html.m-light .s-what .goals-win { height: 230px; margin-top: 22px; }
+html.m-light .s-what .goals li { grid-template-columns: 2.6em 1fr auto; gap: 10px; padding: 10px 0; }
+html.m-light .s-what .goals .n { font-size: 11px; }
+html.m-light .s-what .goals .g { font-size: 19px; white-space: normal; }
+html.m-light .s-what .goals .d { width: 8px; height: 8px; }
+
+/* chapters and the appendix */
+html.m-light .s-section { display: flex; align-items: center; }
+html.m-light .s-section .row { display: block; }
+html.m-light .s-section .num { font-size: 88px; line-height: 1; margin-bottom: 18px; }
+html.m-light .s-section .right { gap: 12px; max-width: none; }
+
+/* 07 · clients: the cards in one column */
+html.m-light .s-cases .h-title { font-size: 34px !important; }
+html.m-light .s-cases .body { margin-top: 10px !important; font-size: 15px !important; }
+html.m-light .s-cases .cs-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px !important; }
+html.m-light .s-cases .cs-card { height: 150px !important; border-radius: 16px; animation: none !important; opacity: 1 !important; transform: none !important; }
+html.m-light .s-cases .cs-txt { padding: 14px 16px !important; }
+html.m-light .s-cases .cs-name { font-size: 20px !important; }
+html.m-light .s-cases .cs-cap { margin-top: 4px; font-size: 12.5px !important; line-height: 1.4 !important; }
+html.m-light .s-cases .cs-btn { margin-top: 10px !important; padding: 6px 12px !important; font-size: 11px !important; }
+html.m-light .s-cases .cs-more .cs-txt { padding: 0 16px !important; }
+html.m-light .s-cases .cs-more-k { font-size: 10px; margin-bottom: 6px; }
+html.m-light .s-cases .cs-more .cs-name { font-size: 20px !important; white-space: normal; }
+html.m-light .s-cases .cs-more .cs-cap { font-size: 12.5px; }
+html.m-light .s-cases .cs-more .cs-more-btn { margin-top: 10px; }
+
+/* 08–12 · client cases: the vertical film, the case on the lower part, scrolling if it is long */
+html.m-light deck-stage > section.s-case { padding: 0 !important; }
+html.m-light .s-case .cp-bg { position: sticky; top: 0; height: 100svh; margin-bottom: -100svh; z-index: -2; }
+html.m-light .s-case .cp-scrim { position: sticky; top: 0; height: 100svh; margin-bottom: -100svh;
+  background: linear-gradient(180deg, rgba(13, 15, 30, .45) 0%, rgba(13, 15, 30, .15) 22%, rgba(13, 15, 30, .78) 46%, rgba(13, 15, 30, .96) 100%); }
+html.m-light .s-case .cp-in { position: relative; left: auto; right: auto; bottom: auto; padding: 46vh 22px 104px; }
+html.m-light .s-case .cp-eyebrow { font-size: 10px; line-height: 1.6; }
+html.m-light .s-case .cp-eyebrow .n { margin-right: .8em; }
+html.m-light .s-case .cp-sector { display: block; }
+html.m-light .s-case .cp-sector::before { content: none; }
+html.m-light .s-case .cp-title { margin-top: 10px; font-size: 34px !important; line-height: 1.04; }
+html.m-light .s-case .cp-desc { margin-top: 18px; font-size: 15px !important; line-height: 1.5; }
+html.m-light .s-case .cp-facts { grid-template-columns: 1fr; gap: 14px; margin-top: 22px; }
+html.m-light .s-case .cp-facts > div { padding-top: 12px; }
+html.m-light .s-case .cp-facts dt { font-size: 10px; }
+html.m-light .s-case .cp-facts dd { margin-top: 6px; font-size: 16px; }
+html.m-light .s-case .cp-tags { flex-wrap: wrap !important; gap: 6px; margin-top: 20px; }
+html.m-light .s-case .cp-tags li { padding: 6px 10px; font-size: 11px; }
+
+/* 14 · two ways to start */
+html.m-light .s-ways .row { grid-template-columns: 1fr; gap: 12px; margin-top: 20px; }
+html.m-light .s-ways .col { min-height: 0; padding: 18px 18px 20px; border-radius: 18px; gap: 8px; }
+html.m-light .tw-viz { height: 110px; margin-bottom: 4px; }
+html.m-light .s-ways .col .tw-k { font-size: 11px; }
+html.m-light .s-ways .col h3 { font-size: 24px !important; }
+html.m-light .s-ways .col p:last-child { font-size: 15px !important; }
+
+/* 15 · the pilot */
+html.m-light .s-pilot .pl-lead { margin-top: 16px; font-size: 16px !important; }
+html.m-light .s-pilot .pl-facts { grid-template-columns: 1fr; gap: 16px; margin-top: 26px; }
+html.m-light .s-pilot .pl-facts > div { padding-top: 12px; }
+html.m-light .s-pilot .pl-facts dt { font-size: 10px; }
+html.m-light .s-pilot .pl-facts dd { margin-top: 6px; font-size: 20px; }
+
+/* 16 · closing */
+html.m-light .s-close .stack { max-width: none; }
+html.m-light .s-close .h-display { font-size: 40px !important; }
+html.m-light .s-close .row { grid-template-columns: 1fr; gap: 16px; margin-top: 36px; }
+html.m-light .s-close .row .item .lbl { font-size: 10px; }
+html.m-light .s-close .row .item .val { font-size: 17px; }
+html.m-light .s-close .orb { width: 520px !important; height: 520px !important; right: -220px !important; bottom: -160px !important; }
+
+/* 17, 23 · end */
+html.m-light .s-end .end-logo { width: 160px; }
+
+/* 19 · appendix index */
+html.m-light .v2-inside .in-index { margin-top: 22px; }
+html.m-light .v2-inside .in-index li { grid-template-columns: 30px 1fr; gap: 4px 10px; padding: 12px 0; font-size: 17px; }
+html.m-light .v2-inside .in-index li > span.n { font-size: 11px; }
+html.m-light .v2-inside .in-index li > em.s { grid-column: 2; font-size: 10px; }
+
+/* 20–22 · the films: the text, then the film in a box under it */
+html.m-light .v2-film .film-grid { display: flex; flex-direction: column; gap: 16px; }
+html.m-light .v2-film .wr-tag { font-size: 11px; margin-bottom: 8px; }
+html.m-light .v2-film .wr-lead { font-size: 26px !important; line-height: 1.1; }
+html.m-light .v2-film .wr-how { margin: 14px 0 6px !important; font-size: 10px; }
+html.m-light .v2-film .wr-desc { font-size: 14.5px !important; line-height: 1.5; }
+html.m-light .v2-film .wr-steps { margin-top: 12px !important; }
+html.m-light .v2-film .wr-steps li { grid-template-columns: 30px 1fr; padding: 7px 0 !important; font-size: 12.5px !important; }
+html.m-light .v2-film .wr-steps li > span { font-size: 10px; }
+html.m-light .v2-film .wr-vis.flowv { width: 100% !important; height: 36svh !important; min-height: 220px; border-radius: 20px; order: -1; }
+html.m-light .v2-film .wr-vis.flowv .sc-cap, html.m-light .v2-film .fs-pause { display: none; }
+}
+
+/* the band under the arrows (standard): on our slides the background is blobs over ink, so a solid band read as a
+   black strip. It fades in instead, from clear to the slide colour, and the text dissolves under the arrows */
+@media (orientation: portrait) {
+  html.m-light .thumbnav .tn-bar { height: calc(118px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent 0%, var(--tn-bg, transparent) 62%) !important; }
+}
+
+/* the arrows: real glass, the slide blurred behind them (two 54px circles: a tiny layer, unlike a full-width band,
+   and the standard itself keeps this glass on the arrows in landscape) */
+html.m-light .thumbnav button {
+  -webkit-backdrop-filter: blur(14px) saturate(1.6) !important; backdrop-filter: blur(14px) saturate(1.6) !important;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06) 60%, rgba(255, 255, 255, .12)), rgba(13, 15, 30, .28) !important;
+  border: 1px solid rgba(255, 255, 255, .38) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(255, 255, 255, .08), 0 8px 22px rgba(0, 0, 0, .22); }
+html.m-light .thumbnav button:active { background: linear-gradient(160deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .12)), rgba(13, 15, 30, .4) !important; }
+html.m-light .thumbnav.on-light button { background: linear-gradient(160deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .02) 60%), rgba(13, 15, 30, .62) !important;
+  border-color: rgba(255, 255, 255, .5) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 22px rgba(13, 15, 30, .2); }
+
+/* 04 · in portrait the title stays whole ("Growth can be a system"); "a system you can" moves above the tiles,
+   which finish the sentence as on the computer */
+@media (orientation: portrait) {
+  html.m-light .s-design[data-step] .t-tail { display: none !important; }
+  html.m-light .s-design .vp-row::before { content: 'A system you can'; grid-column: 1 / -1; margin: 6px 0 2px;
+    font-size: 20px; font-weight: 300; letter-spacing: -0.02em; color: rgba(245, 244, 239, .82); }
+}
+@media (orientation: portrait) { html.m-light .s-design .h-title .key { white-space: nowrap; } }
+@media (orientation: portrait) { html.m-light .s-design .t-fold { white-space: normal !important; display: inline !important; overflow: visible !important; } }

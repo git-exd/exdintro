@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>.exd — Sign in</title>
 <link rel="stylesheet" href="/exd/colors_and_type.css" />
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap" rel="stylesheet" />
 <style>
+  /* the type of the site and the deck (v2.1): Zalando Sans variable only, the accent word heavy and expanded */
+  @font-face { font-family: 'Zalando Sans VF'; font-style: normal; font-weight: 200 900; font-stretch: 75% 125%; font-display: swap;
+    src: url('/exd/fonts/ZalandoSans-VF-latin.woff2') format('woff2-variations'), url('/exd/fonts/ZalandoSans-VF-latin.woff2') format('woff2'); }
+  :root { --exd-sans: 'Zalando Sans VF', 'Zalando Sans', system-ui, sans-serif; --pink: #f62667; --bone: #f5f4ef; }
   :root { color-scheme: dark; }
   html, body { margin: 0; padding: 0; height: 100%; background: var(--exd-ink); font-family: var(--exd-sans); color: #fff; font-weight: 300; }
   body { display: grid; place-items: center; padding: 24px; overflow: hidden; position: relative; isolation: isolate; }
@@ -22,12 +25,12 @@
 
   .top { position: fixed; top: 36px; left: 64px; right: 64px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
   .top img { height: 32px; }
-  .top .ref { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 500; }
+  .top .ref { font-size: 12px; letter-spacing: 0.09em; font-stretch: 125%; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 520; }
 
   .card { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 48px 44px; }
-  .eyebrow { font-size: 13px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--exd-accent-alt); margin: 0 0 16px; }
-  h1 { font-family: var(--exd-sans); font-weight: 700; font-size: 44px; line-height: 1.06; letter-spacing: -0.01em; margin: 0 0 12px; color: #fff; }
-  h1 .serif { font-family: var(--exd-serif); font-style: italic; font-weight: 400; color: rgba(255,255,255,0.7); }
+  .eyebrow { font-size: 12px; font-weight: 520; font-stretch: 125%; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(245,244,239,0.6); margin: 0 0 16px; }
+  h1 { font-family: var(--exd-sans); font-weight: 300; font-size: 46px; line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 14px; color: var(--bone); }
+  h1 .key { font-weight: 780; font-stretch: 118%; letter-spacing: -0.035em; }
   p.lede { margin: 0 0 32px; font-size: 16px; line-height: 1.5; color: rgba(255,255,255,0.6); }
 
   form { display: flex; flex-direction: column; gap: 14px; }
@@ -36,7 +39,7 @@
   input:focus { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); }
   input::placeholder { color: rgba(255,255,255,0.3); }
 
-  button { margin-top: 8px; padding: 16px 22px; font-size: 15px; font-weight: 500; font-family: inherit; color: #fff; background: var(--exd-accent-alt); border: 0; border-radius: 100px; cursor: pointer; transition: opacity 0.15s, transform 0.05s; }
+  button { margin-top: 8px; padding: 16px 22px; font-size: 15px; font-weight: 500; font-family: inherit; color: #fff; font-weight: 560; font-stretch: 108%; background: var(--pink); border: 0; border-radius: 100px; box-shadow: 0 10px 28px rgba(246,38,103,.32); cursor: pointer; transition: opacity 0.15s, transform 0.05s; }
   button:hover { opacity: 0.92; }
   button:active { transform: scale(0.99); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -67,7 +70,7 @@
 
   <div class="card">
     <p class="eyebrow">Sign in</p>
-    <h1>Welcome <span class="serif">to .exd</span></h1>
+    <h1>Welcome <span class="key">to .exd</span></h1>
     <p class="lede">Insert the credentials you received to access the deck.</p>
 
     <form id="login" autocomplete="on" novalidate>

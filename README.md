@@ -1,6 +1,8 @@
 # .exd — Introduction Deck (gated)
 
 Single-page presentation deck for **.exd**, served behind a credential gate.
+
+Since 27 October 2026 the deck is the condensed intro (17 slides) in the style of the site v2.1: one typeface (Zalando Sans variable), client cases in the format of the site's case pages with their films, and a phone and tablet version (portrait reflow, thumb arrows; the standard of `git-exd/exd-presentazioni`). Its source is `Intro exd - 211026 condensata.html` in the deck working folder; `views/deck.html` is that file with the case markers below.
 Credentials live in a private Google Sheet; every successful login fires an email
 notification.
 
@@ -45,7 +47,8 @@ exdintro/
 | POST   | `/api/logout`    | —    | Clear session cookie                                   |
 | GET    | `/deck`          | yes  | Serve the deck HTML                                    |
 | GET    | `/exd/*`         | —    | Brand assets (public)                                  |
-| GET    | `/deck-stage.js` | —    | Deck-stage runtime (public)                            |
+| GET    | `/deck-stage.js` | —    | Deck-stage runtime of the previous deck (public)       |
+| GET    | `/deck-v3.css` and the other deck files | — | Styles and scripts of the deck, listed in `DECK_FILES` in `server.js` (public) |
 | GET    | `/healthz`       | —    | Liveness probe for Railway                             |
 
 Only `/deck` is gated. The brand assets are not sensitive.
@@ -69,10 +72,10 @@ matches columns by name (case-insensitive).
 Only `email` and `password` are required.
 
 - `name`, `company` — appear in the notification email.
-- `industry` — personalizes slide 18 ("We track the *banking* industry
-  closely."). When empty, the slide reads the generic "We track *your*
-  industry closely." Accepted column names: `industry`, `industria`,
-  `settore`.
+- `industry` — personalized slide 18 of the previous deck ("We track the *banking*
+  industry closely."). The current deck has no such slide, so the column has no
+  effect for now (the `{{INDUSTRY_PHRASE}}` placeholder is still supported).
+  Accepted column names: `industry`, `industria`, `settore`.
 - **Case priority columns** (one per case study) — each cell is a positive
   integer. Lower numbers come first. Empty cells leave the case in its
   default position at the end. Writing `hide` (case-insensitive) in a cell
@@ -80,8 +83,12 @@ Only `email` and `password` are required.
   (case-insensitive): `Luxardo`, `Pasticceria Giotto` (or `Giotto`),
   `DAB Pumps` (or `DAB`), `vVardis`, `Crédit Agricole` (or `Credit Agricole`).
   In the example above Alice sees: **DAB Pumps → Crédit Agricole → Luxardo →
-  Pasticceria Giotto → vVardis** (the last two keep their default order at the
+  vVardis → Pasticceria Giotto** (the last two keep their default order at the
   end).
+- The server applies the order to the case slides (between `<!-- CASES:START` and
+  `<!-- CASES:END -->` in `views/deck.html`) and to their cards on the clients slide
+  (between `<!-- CARDS:START -->` and `<!-- CARDS:END -->`), and numbers the cases
+  (01), (02)… again. Keep the markers when the deck is updated.
 
 ### 2. Publish the sheet as CSV
 

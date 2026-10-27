@@ -35,6 +35,18 @@ app.get('/deck-stage.js', (req, res) => {
   res.type('application/javascript');
   res.sendFile(path.join(__dirname, 'deck-stage.js'));
 });
+// The styles and scripts of the deck (October 2026, site v2.1 style and phone version). Short cache: they change
+// with the deck, and a stale copy would not match the new markup.
+const DECK_FILES = [
+  'deck-stage-051026.js', 'deck-v2.css', 'deck-v2.js', 'deck-v3.css', 'deck-v3.js', 'films.css',
+  'deck-mobile-head.js', 'deck-mobile.css', 'deck-mobile.js',
+];
+for (const f of DECK_FILES) {
+  app.get('/' + f, (req, res) => {
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.sendFile(path.join(__dirname, f));
+  });
+}
 
 function signSession(user) {
   return jwt.sign(
@@ -63,12 +75,11 @@ function escapeHtml(s) {
   );
 }
 
-// Reorder the five case-study sections inside the deck HTML according to the
-// per-user priorities in the session. Cases listed in `hidden` are dropped
-// entirely; of the rest, cases with a priority come first, sorted ascending,
-// and cases without a priority keep their original order at the end. The
-// region is identified by its leading and trailing comments (kept stable in
-// deck.html on purpose).
+// Reorder the five case studies according to the per-user priorities in the session, in two places: the case
+// slides (between <!-- CASES:START --> and <!-- CASES:END --> in deck.html) and their cards on the clients slide
+// (between <!-- CARDS:START --> and <!-- CARDS:END -->). Cases listed in `hidden` are dropped from both; of the
+// rest, cases with a priority come first, sorted ascending, and cases without a priority keep their original
+// order at the end. The case slides are then numbered again, (01), (02)…, and the cards enter in the new order.
 const CASE_NAME_TO_KEY = {
   'Luxardo': 'luxardo',
   'Pasticceria Giotto': 'giotto',
@@ -76,36 +87,58 @@ const CASE_NAME_TO_KEY = {
   'vVardis': 'vvardis',
   'Crédit Agricole': 'credit_agricole',
 };
-const CASE_REGION_START = '  <!-- 10 · Case Study · Luxardo -->';
-const CASE_REGION_END   = "  <!-- 14 · Statement · Let's dive in -->";
+
+function sortBlocks(blocks, priorities, hiddenSet) {
+  return blocks
+    .map((b, originalIdx) => {
+      const key = CASE_NAME_TO_KEY[b.name];
+      const p = key ? priorities[key] : undefined;
+      const priority = (typeof p === 'number' && Number.isFinite(p) && p > 0) ? p : null;
+      return { ...b, key, priority, originalIdx };
+    })
+    .filter((b) => !(b.key && hiddenSet.has(b.key)))
+    .sort((a, b) => {
+      if (a.priority != null && b.priority != null) return a.priority - b.priority || a.originalIdx - b.originalIdx;
+      if (a.priority != null) return -1;
+      if (b.priority != null) return 1;
+      return a.originalIdx - b.originalIdx;
+    });
+}
+
+// the region between two markers, split into blocks that each start with `opener` and carry the case name
+function splitRegion(html, start, end, opener, nameRe) {
+  const si = html.indexOf(start), ei = html.indexOf(end);
+  if (si === -1 || ei === -1 || ei <= si) return null;
+  const from = si + start.length;
+  const region = html.slice(from, ei);
+  const parts = region.split(new RegExp(`(?=${opener})`)).filter((p) => p.trimStart().startsWith(opener));
+  const blocks = parts.map((text) => { const m = text.match(nameRe); return { text, name: m ? m[1] : '' }; });
+  return { from, to: ei, blocks };
+}
 
 function reorderCaseStudies(html, priorities = {}, hidden = []) {
-  const si = html.indexOf(CASE_REGION_START);
-  const ei = html.indexOf(CASE_REGION_END);
-  if (si === -1 || ei === -1 || ei <= si) return html;
-  const region = html.slice(si, ei);
-  const parts = region.split(/(?=  <!-- \d+ · Case Study · )/).filter((p) => p.trim());
-  if (parts.length === 0) return html;
-
   const hiddenSet = new Set(hidden);
-  const blocks = parts.map((block, originalIdx) => {
-    const m = block.match(/<!-- \d+ · Case Study · ([^\n]+?) -->/);
-    const key = m ? CASE_NAME_TO_KEY[m[1].trim()] : null;
-    const p = key ? priorities[key] : undefined;
-    const priority = (typeof p === 'number' && Number.isFinite(p) && p > 0) ? p : null;
-    return { block, originalIdx, priority, key };
-  }).filter((b) => !(b.key && hiddenSet.has(b.key)));
-
-  blocks.sort((a, b) => {
-    if (a.priority != null && b.priority != null) {
-      return a.priority - b.priority || a.originalIdx - b.originalIdx;
-    }
-    if (a.priority != null) return -1;
-    if (b.priority != null) return 1;
-    return a.originalIdx - b.originalIdx;
-  });
-
-  return html.slice(0, si) + blocks.map((b) => b.block).join('') + html.slice(ei);
+  const slides = splitRegion(html, '<!-- CASES:START', '<!-- CASES:END -->',
+    '<section class="s-case', /data-label="Case · ([^"]+)"/);
+  const cards = splitRegion(html, '<!-- CARDS:START -->', '<!-- CARDS:END -->',
+    '<div class="cs-card', /data-target="Case · ([^"]+)"/);
+  if (!slides) return html;
+  const headEnd = html.indexOf('-->', html.indexOf('<!-- CASES:START')) + 3;   // keep the marker comment whole
+  const order = sortBlocks(slides.blocks, priorities, hiddenSet);
+  const slideHtml = order.map((b, i) => b.text
+    .replace(/<span class="n">\(\d+\)<\/span>/, `<span class="n">(${String(i + 1).padStart(2, '0')})</span>`)
+    .trimEnd() + '\n\n  ').join('');
+  let out = html.slice(0, headEnd) + '\n  ' + slideHtml + html.slice(slides.to);
+  if (cards) {
+    // positions shift after the slides were rewritten: find the cards again in the new html
+    const c = splitRegion(out, '<!-- CARDS:START -->', '<!-- CARDS:END -->', '<div class="cs-card', /data-target="Case · ([^"]+)"/);
+    const sorted = sortBlocks(c.blocks, priorities, hiddenSet);
+    const cardHtml = sorted.map((b, i) => b.text.replace(/style="--i: \d+"/, `style="--i: ${i + 2}"`).trimEnd() + '\n        ').join('');
+    const ctaIdx = sorted.length + 2;
+    out = out.slice(0, c.from) + '\n        ' + cardHtml + out.slice(c.to);
+    out = out.replace(/(<a class="cs-card cs-more rv" style="--i: )\d+/, `$1${ctaIdx}`);
+  }
+  return out;
 }
 
 function verifySession(req) {
