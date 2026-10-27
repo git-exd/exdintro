@@ -1,5 +1,7 @@
-/* deck-mobile.css — phones and tablets (html.m-light, set by deck-mobile-head.js).
-   The standard of git-exd/exd-presentazioni (shared/assets/offerta.css, October 2026):
+/* deck-mobile.css — phones and tablets (html.m-light, set by offerta-head.js).
+   The standard of git-exd/exd-presentazioni (shared/assets/offerta.css, October 2026, and its latest use in
+   vetrolux/offerta-2026-10, v3/deck-v3.css). offerta.css itself is not loaded: it also styles classes that this deck
+   uses differently (s-section, s-pilot, s-end); its phone rules are here, with the rules for this deck's slides:
    · the light version: no grain, no blur or frosted glass, small still blobs, no will-change layers
      (they are what keeps iOS from closing the page)
    · portrait: one slide at a time, as large as the screen, the content reflowed in a column with readable text;
@@ -12,7 +14,8 @@
   .thumbnav { display: block; }
   .thumbnav button { position: fixed; z-index: 2147483000; bottom: 18vh; width: 52px; height: 52px; padding: 0; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.28);
-    background: rgba(13,15,30,0.55); color: #fff; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s, background .15s; }
+    background: rgba(13,15,30,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    color: #fff; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .15s, background .15s; }
   .thumbnav button:active { transform: scale(0.92); background: rgba(13,15,30,0.8); }
   .thumbnav .tn-prev { left: max(12px, env(safe-area-inset-left)); }
   .thumbnav .tn-next { right: max(12px, env(safe-area-inset-right)); }
@@ -25,7 +28,9 @@
 html.m-light *, html.m-light *::before, html.m-light *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 html.m-light deck-stage section::after { display: none !important; }                 /* grain */
 html.m-light .orb-piece { filter: none !important; will-change: auto !important; animation: none !important; }
-html.m-light .blobs i { filter: none !important; mix-blend-mode: normal !important; animation: none !important; will-change: auto !important; translate: none !important; }
+/* blobs without blur (the blurred layer is the heavy one on iPhone); the slow drift stays, it is only a transform of
+   gradients that are already soft (as in Vetrolux). No lean towards the finger (deck-v3.js) */
+html.m-light .blobs i { filter: none !important; mix-blend-mode: normal !important; will-change: auto !important; }
 html.m-light .g-blob { filter: none !important; animation: none !important; }
 html.m-light .flowv .fs, html.m-light .wr-vis .fs { will-change: auto !important; }
 html.m-light .wr-vis::after { display: none !important; }
@@ -40,7 +45,9 @@ html.m-light .s-case .cp-tags li { background: rgba(13, 15, 30, .55); }
 html.m-light { --pad-x: 22px; --pad-y: 56px; }
 html.m-light, html.m-light body { background: #0d0f1e; }
 html.m-light deck-stage > section { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-html.m-light deck-stage section { padding: 64px 22px 104px !important; }
+html.m-light deck-stage section { padding: 58px 22px 104px !important; }
+/* at the end of the scroll the last content sits above the arrows (54 px + margin + the iPhone safe area) */
+html.m-light deck-stage section { padding-bottom: calc(124px + env(safe-area-inset-bottom)) !important; }
 /* centred in height, but a content taller than the screen starts at the top (it scrolls) */
 html.m-light deck-stage section .frame, html.m-light deck-stage section .v2-frame { min-height: 100%; height: auto; display: flex; flex-direction: column; justify-content: flex-start; }
 html.m-light deck-stage section .frame::before, html.m-light deck-stage section .frame::after,
@@ -63,8 +70,9 @@ html.m-light .thumbnav button:disabled { opacity: 0.3; }
 /* chrome and type */
 html.m-light .chrome .mark, html.m-light .v2-mark { top: 22px !important; left: 22px !important; height: 18px !important; }
 html.m-light .chrome .pgno { display: none; }
-html.m-light .eyebrow, html.m-light .v2 .eyebrow { font-size: 11px !important; letter-spacing: .1em; margin-bottom: 0; }
-html.m-light .eyebrow.sh { gap: 10px; }
+html.m-light .eyebrow, html.m-light .v2 .eyebrow { font-size: 11px !important; letter-spacing: .08em; margin-bottom: 0; }
+html.m-light .eyebrow.sh { gap: 8px; }
+html.m-light .eyebrow .rule { display: none; }
 html.m-light .h-title, html.m-light .v2 .h-title { font-size: 34px !important; line-height: 1.06 !important; letter-spacing: -0.03em; margin-top: 12px !important; max-width: none !important; white-space: normal !important; }
 html.m-light .h-display { font-size: 44px !important; line-height: 1.02 !important; }
 html.m-light .body, html.m-light .v2 .body { font-size: 16px !important; line-height: 1.55 !important; max-width: none !important; }
@@ -155,7 +163,7 @@ html.m-light deck-stage > section.s-case { padding: 0 !important; }
 html.m-light .s-case .cp-bg { position: sticky; top: 0; height: 100svh; margin-bottom: -100svh; z-index: -2; }
 html.m-light .s-case .cp-scrim { position: sticky; top: 0; height: 100svh; margin-bottom: -100svh;
   background: linear-gradient(180deg, rgba(13, 15, 30, .45) 0%, rgba(13, 15, 30, .15) 22%, rgba(13, 15, 30, .78) 46%, rgba(13, 15, 30, .96) 100%); }
-html.m-light .s-case .cp-in { position: relative; left: auto; right: auto; bottom: auto; padding: 46vh 22px 104px; }
+html.m-light .s-case .cp-in { position: relative; left: auto; right: auto; bottom: auto; padding: 46vh 22px calc(124px + env(safe-area-inset-bottom)); }
 html.m-light .s-case .cp-eyebrow { font-size: 10px; line-height: 1.6; }
 html.m-light .s-case .cp-eyebrow .n { margin-right: .8em; }
 html.m-light .s-case .cp-sector { display: block; }
@@ -214,23 +222,15 @@ html.m-light .v2-film .wr-vis.flowv { width: 100% !important; height: 36svh !imp
 html.m-light .v2-film .wr-vis.flowv .sc-cap, html.m-light .v2-film .fs-pause { display: none; }
 }
 
-/* the band under the arrows (standard): on our slides the background is blobs over ink, so a solid band read as a
-   black strip. It fades in instead, from clear to the slide colour, and the text dissolves under the arrows */
+/* arrows (Vetrolux): no solid band behind them; the content scrolls under, with a light dark fade at the bottom,
+   and frosted glass only behind the two buttons (a wanted exception to the version without blur: two small circles) */
 @media (orientation: portrait) {
-  html.m-light .thumbnav .tn-bar { height: calc(118px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, transparent 0%, var(--tn-bg, transparent) 62%) !important; }
+  html.m-light .thumbnav .tn-bar { height: calc(130px + env(safe-area-inset-bottom)); background: linear-gradient(to top, rgba(0,0,0,0.38), rgba(0,0,0,0)) !important; }
+  html.m-light .thumbnav button.tn-prev, html.m-light .thumbnav button.tn-next {
+    background: rgba(13,15,30,0.28); border-color: rgba(255,255,255,0.35);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4) !important; backdrop-filter: blur(14px) saturate(1.4) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18); }
 }
-
-/* the arrows: real glass, the slide blurred behind them (two 54px circles: a tiny layer, unlike a full-width band,
-   and the standard itself keeps this glass on the arrows in landscape) */
-html.m-light .thumbnav button {
-  -webkit-backdrop-filter: blur(14px) saturate(1.6) !important; backdrop-filter: blur(14px) saturate(1.6) !important;
-  background: linear-gradient(160deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06) 60%, rgba(255, 255, 255, .12)), rgba(13, 15, 30, .28) !important;
-  border: 1px solid rgba(255, 255, 255, .38) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(255, 255, 255, .08), 0 8px 22px rgba(0, 0, 0, .22); }
-html.m-light .thumbnav button:active { background: linear-gradient(160deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .12)), rgba(13, 15, 30, .4) !important; }
-html.m-light .thumbnav.on-light button { background: linear-gradient(160deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .02) 60%), rgba(13, 15, 30, .62) !important;
-  border-color: rgba(255, 255, 255, .5) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 8px 22px rgba(13, 15, 30, .2); }
 
 /* 04 · in portrait the title stays whole ("Growth can be a system"); "a system you can" moves above the tiles,
    which finish the sentence as on the computer */

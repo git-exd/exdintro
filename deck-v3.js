@@ -276,6 +276,9 @@
   const deckEl = document.querySelector('deck-stage');
   [...(deckEl ? deckEl.children : [])].filter((x) => x.tagName === 'SECTION').forEach((sec, i) => sec.querySelectorAll('.chrome .pgno').forEach((p) => { p.textContent = String(i + 1).padStart(2, '0'); }));
 
+  // the PDF capture (pdf-intro.mjs) brings every moving part to a still, final frame before each shot
+  window.__deckSettle = () => finishers.forEach((f) => f());
+
   /* ── PDF: final states ── */
   window.addEventListener('beforeprint', () => {
     printing = true;

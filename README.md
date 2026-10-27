@@ -49,6 +49,7 @@ exdintro/
 | GET    | `/exd/*`         | —    | Brand assets (public)                                  |
 | GET    | `/deck-stage.js` | —    | Deck-stage runtime of the previous deck (public)       |
 | GET    | `/deck-v3.css` and the other deck files | — | Styles and scripts of the deck, listed in `DECK_FILES` in `server.js` (public) |
+| GET    | `/deck.pdf`      | yes  | The PDF of the deck, in the user's order of the cases  |
 | GET    | `/healthz`       | —    | Liveness probe for Railway                             |
 
 Only `/deck` is gated. The brand assets are not sensitive.
@@ -219,6 +220,29 @@ Open <http://localhost:3000/>.
 - **Removing a user**: deleting the row prevents new logins; sessions already
   issued remain valid until the JWT expires. Rotate `JWT_SECRET` to invalidate
   every active session at once.
+
+## Phones and tablets
+
+The standard of `git-exd/exd-presentazioni` (October 2026, as in the Bizzotto and Vetrolux decks):
+`offerta-head.js` and `offerta.js` are its shared files, unchanged. On a phone or tablet the page gets `html.m-light`:
+no grain, no blur (except the glass of the two arrows), one slide at a time with two thumb arrows; in portrait the
+slide is as large as the screen and reflows in a column (`deck-mobile.css`), in landscape it is the desktop slide,
+scaled. Zoom is locked (on iPhone the zoomed deck ran out of memory). The case films use their vertical cut in
+portrait (`deck-mobile.js`). Check on an iPhone 13 and an iPhone SE, in portrait and landscape, with Safari.
+
+## PDF
+
+The PDF button of the deck (or `P`) downloads `/deck.pdf` instead of opening the browser's print dialog, as in
+`git-exd/exd-presentazioni`: every slide photographed with Chrome at 2880×1620 once its animation is over (Safari
+lays out 1920×1080 badly, and printing with the grain made a 78 MB file).
+
+- `python3 tools/pdf.py` (once: `cd tools && npm install`, `pip install pillow`) starts the server locally with a
+  session signed by `JWT_SECRET` from `.env`, photographs every slide (slide 4 twice: its first and its last step)
+  and saves one PDF page per slide in `pdf/pages`, with `pdf/manifest.json`.
+- `/deck.pdf` joins the pages in the user's order of the cases, without the hidden ones. A user with their own
+  order (or hidden cases) gets the case pages without their number and no page of the clients grid.
+- **Run `python3 tools/pdf.py` again after every change to `views/deck.html`, before the push**, or the PDF
+  shows the old deck.
 
 ## Keyboard (inside the deck)
 

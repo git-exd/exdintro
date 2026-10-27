@@ -1,0 +1,74 @@
+{
+ "title": "Intro .exd",
+ "pages": {
+  "01 Cover": [
+   "01.pdf"
+  ],
+  "02 About": [
+   "02.pdf"
+  ],
+  "03 Problem": [
+   "03.pdf"
+  ],
+  "04 Premise · light wall": [
+   "04.pdf",
+   "04b.pdf"
+  ],
+  "05 What we do": [
+   "05.pdf"
+  ],
+  "Chapter 01 · Client cases": [
+   "06.pdf"
+  ],
+  "06 Cases · selector": [
+   "07.pdf"
+  ],
+  "Case · DAB Pumps": [
+   "08.pdf"
+  ],
+  "Case · vVardis": [
+   "09.pdf"
+  ],
+  "Case · Crédit Agricole": [
+   "10.pdf"
+  ],
+  "Case · Luxardo": [
+   "11.pdf"
+  ],
+  "Case · Pasticceria Giotto": [
+   "12.pdf"
+  ],
+  "Chapter 02 · Working together": [
+   "13.pdf"
+  ],
+  "Working together · Two ways to start": [
+   "14.pdf"
+  ],
+  "Working together · The pilot": [
+   "15.pdf"
+  ],
+  "16 Closing": [
+   "16.pdf"
+  ],
+  "End · Logo": [
+   "17.pdf"
+  ]
+ },
+ "alt": {
+  "Case · DAB Pumps": [
+   "08n.pdf"
+  ],
+  "Case · vVardis": [
+   "09n.pdf"
+  ],
+  "Case · Crédit Agricole": [
+   "10n.pdf"
+  ],
+  "Case · Luxardo": [
+   "11n.pdf"
+  ],
+  "Case · Pasticceria Giotto": [
+   "12n.pdf"
+  ]
+ }
+}

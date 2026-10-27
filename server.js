@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import { PDFDocument } from 'pdf-lib';
 
 import { findUser } from './lib/sheets.js';
 import { logLastAccess } from './lib/access-log.js';
@@ -40,6 +41,8 @@ app.get('/deck-stage.js', (req, res) => {
 const DECK_FILES = [
   'deck-stage-051026.js', 'deck-v2.css', 'deck-v2.js', 'deck-v3.css', 'deck-v3.js', 'films.css',
   'deck-mobile-head.js', 'deck-mobile.css', 'deck-mobile.js',
+  // phones, tablets and the PDF button: the standard of git-exd/exd-presentazioni (shared/assets), unchanged
+  'offerta-head.js', 'offerta.js',
 ];
 for (const f of DECK_FILES) {
   app.get('/' + f, (req, res) => {
@@ -194,6 +197,51 @@ app.get('/deck', async (req, res) => {
     res.type('html').send(html);
   } catch (err) {
     console.error('deck render error:', err);
+    res.status(500).type('text').send('Internal error');
+  }
+});
+
+// The PDF of the deck, as in git-exd/exd-presentazioni: every slide photographed at 2880×1620 once its animation is
+// over (tools/pdf.py). Here one page per slide is kept in pdf/pages, and each visitor gets the pages in their own
+// order of the cases, without the hidden ones; gated like the deck. Assembled PDFs are kept in memory by order.
+const PDF_DIR = path.join(__dirname, 'pdf');
+const pdfCache = new Map();
+// A visitor with their own order of the cases (or hidden cases) gets the case pages without the number (photographed
+// for the default order) and no page of the clients grid, which would show the default cards
+const PDF_GRID_LABEL = '06 Cases · selector';
+async function deckPdf(labels, personal) {
+  const key = (personal ? 'p|' : '') + labels.join('|');
+  if (pdfCache.has(key)) return pdfCache.get(key);
+  const manifest = JSON.parse(await fs.readFile(path.join(PDF_DIR, 'manifest.json'), 'utf8'));
+  const out = await PDFDocument.create();
+  out.setTitle(manifest.title || '.exd'); out.setAuthor('.exd');
+  for (const label of labels) {
+    if (personal && label === PDF_GRID_LABEL) continue;
+    const files = (personal && manifest.alt && manifest.alt[label]) || manifest.pages[label] || [];
+    for (const file of files) {
+      const src = await PDFDocument.load(await fs.readFile(path.join(PDF_DIR, 'pages', file)));
+      (await out.copyPages(src, src.getPageIndices())).forEach((pg) => out.addPage(pg));
+    }
+  }
+  const bytes = Buffer.from(await out.save());
+  if (pdfCache.size > 50) pdfCache.clear();
+  pdfCache.set(key, bytes);
+  return bytes;
+}
+
+app.get('/deck.pdf', async (req, res) => {
+  const session = verifySession(req);
+  if (!session) return res.redirect('/');
+  try {
+    const html = reorderCaseStudies(await getDeckTemplate(), session.cp || {}, session.ch || []);
+    const labels = [...html.matchAll(/<section [^>]*data-label="([^"]+)"/g)].map((m) => m[1]);
+    const personal = Object.keys(session.cp || {}).length > 0 || (session.ch || []).length > 0;
+    const pdf = await deckPdf(labels, personal);
+    res.set('Cache-Control', 'no-store');
+    res.set('Content-Disposition', 'attachment; filename="Intro .exd.pdf"');
+    res.type('application/pdf').send(pdf);
+  } catch (err) {
+    console.error('pdf error:', err);
     res.status(500).type('text').send('Internal error');
   }
 });

@@ -1,0 +1,9 @@
+{
+  "name": "exdintro-tools",
+  "private": true,
+  "type": "module",
+  "description": "PDF of the deck: tools/pdf.py and tools/pdf-capture.mjs (as in git-exd/exd-presentazioni)",
+  "dependencies": {
+    "playwright-core": "^1.48.2"
+  }
+}
