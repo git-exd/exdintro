@@ -70,7 +70,8 @@ matches columns by name (case-insensitive).
 | ----------------- | --------------- | ----------- | ---------- | -------- | ------- | ------------------ | --------- | ------- | --------------- |
 | alice@example.com | a-shared-string | Alice Rossi | Example Co | banking  | 3       |                    | 1         |         | 2               |
 
-Only `email` and `password` are required.
+Only `email` and `password` are required. The `email` column can also hold a plain username instead of an email address: the
+login field accepts any text, and the match ignores upper and lower case.
 
 - `name`, `company` — appear in the notification email.
 - `industry` — personalized slide 18 of the previous deck ("We track the *banking*
