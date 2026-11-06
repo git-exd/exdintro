@@ -50,9 +50,9 @@
  *      margini né angoli arrotondati; le eventuali fasce prendono il colore di
  *      sfondo della slide corrente, così la cornice nera sparisce. Lo stesso
  *      "a tutto schermo" vale sui dispositivi touch e sugli schermi stretti.
- *  (i) dispositivi touch in verticale: animazione che invita a ruotare lo
- *      smartphone (il web non può bloccare l'orientamento su iOS); su Android,
- *      entrando a schermo intero si prova a bloccare l'orizzontale.
+ *  (i) [tolto in deck-stage-v3.js] l'invito a ruotare lo smartphone e il blocco
+ *      dell'orizzontale a schermo intero: il deck è responsive (offerta.js e
+ *      deck-mobile.css), in verticale si reimpagina.
  *  (j) esporta in PDF (tasto P o pulsante "PDF"): apre la stampa del browser,
  *      dove si sceglie "Salva come PDF"; una slide per pagina alla misura del
  *      deck, con le animazioni ferme nello stato finale.
@@ -169,32 +169,6 @@
     :host([edge]) .canvas { border-radius: 0; }
     :host([edge]) .sidenav { display: none; }
 
-    /* Dispositivi touch in verticale: invito a ruotare lo smartphone */
-    .rotate {
-      display: none; position: fixed; inset: 0; z-index: 2147483400;
-      flex-direction: column; align-items: center; justify-content: center; gap: 26px;
-      padding: 24px; text-align: center; color: #fff;
-      background: radial-gradient(ellipse 80% 55% at 50% 45%, rgba(107,31,122,0.5), rgba(13,15,30,0) 70%), #0d0f1e;
-      font-family: var(--exd-sans, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif);
-      font-weight: 300; font-size: 18px; letter-spacing: 0.02em;
-    }
-    .rotate svg { width: 104px; height: 104px; overflow: visible; }
-    .rotate .phone { transform-origin: 52px 52px; animation: rotate-phone 3s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
-    .rotate .arc { stroke-dasharray: 70; stroke-dashoffset: 70; animation: rotate-arc 3s ease-in-out infinite; }
-    @keyframes rotate-phone {
-      0%, 22%   { transform: rotate(0deg); }
-      48%, 78%  { transform: rotate(-90deg); }
-      96%, 100% { transform: rotate(0deg); }
-    }
-    @keyframes rotate-arc {
-      0%, 18%  { stroke-dashoffset: 70; opacity: 0; }
-      26%      { opacity: 1; }
-      46%      { stroke-dashoffset: 0; opacity: 1; }
-      70%, 100% { stroke-dashoffset: 0; opacity: 0; }
-    }
-    @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
-      .rotate { display: flex; }
-    }
     /* Hide side nav on touch devices — tap zones already cover navigation. */
     @media (hover: none) and (pointer: coarse) {
       .sidenav { display: none; }
@@ -363,7 +337,7 @@
         break-after: auto;
         page-break-after: auto;
       }
-      .overlay, .tapzones, .sidenav, .rotate { display: none !important; }
+      .overlay, .tapzones, .sidenav { display: none !important; }
     }
   `;
 
@@ -530,22 +504,7 @@
       navNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
       navNext.addEventListener('click', () => this._go(this._index + 1, 'click'));
 
-      // Invito a ruotare (visibile solo su touch in verticale, via CSS)
-      const rotate = document.createElement('div');
-      rotate.className = 'rotate export-hidden';
-      rotate.setAttribute('role', 'status');
-      rotate.innerHTML = `
-        <svg viewBox="0 0 104 104" fill="none" aria-hidden="true">
-          <g class="arc" stroke="#e9193e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M92 46A40 40 0 0 0 58 12"/><path d="M65 7l-7 5 6 6"/>
-          </g>
-          <g class="phone" stroke="#fff" stroke-width="3" stroke-linecap="round">
-            <rect x="33" y="16" width="38" height="72" rx="8"/><path d="M47 25h10"/>
-          </g>
-        </svg>
-        <span>Ruota lo smartphone</span>`;
-
-      this._root.append(style, stage, tapzones, navPrev, navNext, overlay, rotate);
+      this._root.append(style, stage, tapzones, navPrev, navNext, overlay);
       this._canvas = canvas;
       this._slot = slot;
       this._overlay = overlay;
@@ -840,12 +799,6 @@
         p = (d.exitFullscreen || d.webkitExitFullscreen).call(d);
       } else if (el.requestFullscreen || el.webkitRequestFullscreen) {
         p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-        // Dove è consentito (Android), a schermo intero si blocca l'orizzontale
-        if (p && p.then) {
-          p = p.then(() => {
-            if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape').catch(() => {});
-          });
-        }
       }
       if (p && p.catch) p.catch(() => {});
     }

@@ -31,7 +31,7 @@ exdintro/
 │   ├── login.html         # public: the sign-in page
 │   └── deck.html          # gated: the actual deck (served only after auth)
 ├── exd/                   # public: brand assets (CSS, fonts, images, logos)
-├── deck-stage.js          # public: <deck-stage> web component
+├── deck-stage-v3.js       # public: <deck-stage> web component (no "rotate the phone" prompt: the deck is responsive)
 ├── package.json
 ├── railway.json           # Railway build/deploy config
 ├── .env.example
@@ -47,7 +47,6 @@ exdintro/
 | POST   | `/api/logout`    | —    | Clear session cookie                                   |
 | GET    | `/deck`          | yes  | Serve the deck HTML                                    |
 | GET    | `/exd/*`         | —    | Brand assets (public)                                  |
-| GET    | `/deck-stage.js` | —    | Deck-stage runtime of the previous deck (public)       |
 | GET    | `/deck-v3.css` and the other deck files | — | Styles and scripts of the deck, listed in `DECK_FILES` in `server.js` (public) |
 | GET    | `/deck.pdf`      | yes  | The PDF of the deck, in the user's order of the cases  |
 | GET    | `/healthz`       | —    | Liveness probe for Railway                             |

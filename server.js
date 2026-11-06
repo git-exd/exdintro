@@ -28,18 +28,12 @@ app.use(express.json({ limit: '64kb' }));
 app.use(express.urlencoded({ extended: false, limit: '64kb' }));
 app.use(cookieParser());
 
-// Public static assets: brand CSS, fonts, images, deck-stage runtime.
-// These are not sensitive — only the deck markup (views/deck.html) is gated.
+// Public static assets: brand CSS, fonts, images. Not sensitive — only the deck markup (views/deck.html) is gated.
 app.use('/exd', express.static(path.join(__dirname, 'exd'), { maxAge: '7d' }));
-app.get('/deck-stage.js', (req, res) => {
-  res.set('Cache-Control', 'public, max-age=604800');
-  res.type('application/javascript');
-  res.sendFile(path.join(__dirname, 'deck-stage.js'));
-});
 // The styles and scripts of the deck (October 2026, site v2.1 style and phone version). Short cache: they change
 // with the deck, and a stale copy would not match the new markup.
 const DECK_FILES = [
-  'deck-stage-051026.js', 'deck-v2.css', 'deck-v2.js', 'deck-v3.css', 'deck-v3.js', 'films.css',
+  'deck-stage-v3.js', 'deck-v2.css', 'deck-v2.js', 'deck-v3.css', 'deck-v3.js', 'films.css',
   'deck-mobile-head.js', 'deck-mobile.css', 'deck-mobile.js',
   // phones, tablets and the PDF button: the standard of git-exd/exd-presentazioni (shared/assets), unchanged
   'offerta-head.js', 'offerta.js',

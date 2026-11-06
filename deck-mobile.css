@@ -251,3 +251,6 @@ html.m-light .v2-film .wr-vis.flowv .sc-cap, html.m-light .v2-film .fs-pause { d
   html.m-light deck-stage > section > .orb-stack,
   html.m-light deck-stage > section > .orb { position: fixed !important; }
 }
+
+/* closing: on the phone "the" stays on the first line ("Let's keep the / conversation / going.") */
+@media (orientation: portrait) { html.m-light .s-close .h-display br { display: none; } }
