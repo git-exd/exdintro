@@ -70,5 +70,46 @@
   "Case · Pasticceria Giotto": [
    "12n.pdf"
   ]
+ },
+ "variants": {
+  "esybox": {
+   "pages": {
+    "Case · vVardis": [
+     "esybox-08.pdf"
+    ],
+    "Case · DAB Pumps": [
+     "esybox-09.pdf"
+    ],
+    "Case · Crédit Agricole": [
+     "esybox-10.pdf"
+    ],
+    "Case · Luxardo": [
+     "esybox-11.pdf"
+    ],
+    "Case · Pasticceria Giotto": [
+     "esybox-12.pdf"
+    ],
+    "06 Cases · selector": [
+     "esybox-07.pdf"
+    ]
+   },
+   "alt": {
+    "Case · vVardis": [
+     "esybox-08n.pdf"
+    ],
+    "Case · DAB Pumps": [
+     "esybox-09n.pdf"
+    ],
+    "Case · Crédit Agricole": [
+     "esybox-10n.pdf"
+    ],
+    "Case · Luxardo": [
+     "esybox-11n.pdf"
+    ],
+    "Case · Pasticceria Giotto": [
+     "esybox-12n.pdf"
+    ]
+   }
+  }
  }
 }

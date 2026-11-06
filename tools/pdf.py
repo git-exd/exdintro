@@ -31,7 +31,8 @@ def main():
     pages = out / "pages"
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["node", str(ROOT / "tools" / "pdf-capture.mjs"), tmp], check=True)
-        shots = json.loads((Path(tmp) / "shots.json").read_text())
+        data = json.loads((Path(tmp) / "shots.json").read_text())
+        shots, variant_shots = data["shots"], data.get("variants", {})
         if pages.exists():
             shutil.rmtree(pages)
         pages.mkdir(parents=True)
@@ -44,8 +45,16 @@ def main():
             manifest[s["label"]] = [page(f) for f in s["files"]]
             if s.get("alt"):
                 alt[s["label"]] = [page(f) for f in s["alt"]]
+        # alternative versions (views/variants): the pages of the slides they change
+        variants = {}
+        for name, entries in variant_shots.items():
+            v = variants.setdefault(name, {"pages": {}, "alt": {}})
+            for s in entries:
+                v["pages"][s["label"]] = [page(f) for f in s["files"]]
+                if s.get("alt"):
+                    v["alt"][s["label"]] = [page(f) for f in s["alt"]]
         title = re.search(r"<title>(.*?)</title>", (ROOT / "views" / "deck.html").read_text(encoding="utf-8"))
-        (out / "manifest.json").write_text(json.dumps({"title": title.group(1) if title else ".exd", "pages": manifest, "alt": alt}, indent=1, ensure_ascii=False))
+        (out / "manifest.json").write_text(json.dumps({"title": title.group(1) if title else ".exd", "pages": manifest, "alt": alt, "variants": variants}, indent=1, ensure_ascii=False))
     size = sum(f.stat().st_size for f in pages.glob("*.pdf"))
     print(f"pdf/pages: {len(list(pages.glob('*.pdf')))} pages, {size / 1e6:.1f} MB")
 

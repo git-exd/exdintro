@@ -65,7 +65,45 @@ try {
     shots.push({ label: info.label, files: [...files], alt: files.alt || null });
     console.log(`${i + 1}/${n} ${info.label}`);
   }
-  fs.writeFileSync(path.join(outDir, 'shots.json'), JSON.stringify(shots));
+  // the alternative versions (views/variants/<name>.html): only the slides they change, with a session of that variant
+  const variants = {};
+  const vdir = path.join(ROOT, 'views', 'variants');
+  for (const f of fs.existsSync(vdir) ? fs.readdirSync(vdir).filter((x) => x.endsWith('.html')) : []) {
+    const name = f.slice(0, -5);
+    const markers = [...fs.readFileSync(path.join(vdir, f), 'utf8').matchAll(/<!-- REPLACE: (.+?) -->/g)].map((m) => m[1].trim());
+    let labels = markers.filter((m) => !m.startsWith('card:'));
+    if (markers.some((m) => m.startsWith('card:'))) labels.push('06 Cases · selector');
+    // a version with its own order of the cases: every case slide (their numbers change) and the grid
+    const vctx = await b.newContext({ viewport: { width: 880, height: 495 }, deviceScaleFactor: 2880 / 880 });
+    await vctx.addCookies([{ name: 'exd_session', value: jwt.sign({ sub: 'pdf@exdpeople.org', cp: {}, ch: [], v: name }, process.env.JWT_SECRET, { expiresIn: '1h' }), domain: '127.0.0.1', path: '/' }]);
+    const vp = await vctx.newPage();
+    vp.on('pageerror', (e) => errs.push(name + ': ' + e.message));
+    await vp.goto(`http://127.0.0.1:${PORT}/deck`, { waitUntil: 'load' }); await vp.waitForTimeout(2000);
+    await vp.addStyleTag({ content: '.chrome .pgno { display: none !important; }' });
+    if (/<!-- ORDER: /.test(fs.readFileSync(path.join(vdir, f), 'utf8'))) {
+      const cases = await vp.evaluate(() => document.querySelector('deck-stage')._slides.map((s) => s.dataset.label).filter((l) => l.startsWith('Case · ')));
+      labels = [...new Set([...cases, '06 Cases · selector', ...labels])];
+    }
+    variants[name] = [];
+    for (const label of labels) {
+      const k = await vp.evaluate((l) => document.querySelector('deck-stage')._slides.findIndex((s) => s.dataset.label === l), label);
+      if (k < 0) continue;
+      await vp.evaluate((i) => document.querySelector('deck-stage').goTo(i), k);
+      await vp.waitForTimeout(2500);
+      const base = `${name}-${String(k + 1).padStart(2, '0')}`;
+      const shot = async (file) => { await vp.evaluate(() => window.__deckSettle && window.__deckSettle()); await vp.waitForTimeout(300);
+        await vp.screenshot({ path: path.join(outDir, file), type: 'jpeg', quality: 88 }); return file; };
+      const entry = { label, files: [await shot(base + '.jpg')], alt: null };
+      if (label.startsWith('Case · ')) {
+        await vp.evaluate(() => { const d = document.querySelector('deck-stage'); d._slides[d._index].querySelector('.cp-eyebrow .n').style.display = 'none'; });
+        entry.alt = [await shot(base + 'n.jpg')];
+      }
+      variants[name].push(entry);
+      console.log(`${name}: ${label}`);
+    }
+    await vctx.close();
+  }
+  fs.writeFileSync(path.join(outDir, 'shots.json'), JSON.stringify({ shots, variants }));
   if (errs.length) console.log('Errors in the page:', errs);
 } finally {
   await b.close();

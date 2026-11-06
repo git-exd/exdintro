@@ -86,6 +86,12 @@ Only `email` and `password` are required.
   In the example above Alice sees: **DAB Pumps → Crédit Agricole → Luxardo →
   vVardis → Pasticceria Giotto** (the last two keep their default order at the
   end).
+- `variant` (optional; also `variante`, `version`, `versione`) — an alternative version of the deck, in
+  `views/variants/<name>.html`. Today **`esybox`**: the DAB Pumps case tells the direct-to-consumer demand
+  generation system for EsyBox Pop (slide and card on the clients slide), and the cases default to vVardis →
+  DAB Pumps → Crédit Agricole → Luxardo → Pasticceria Giotto. A user's own case order still wins. Empty or
+  unknown → the standard deck. A variant file holds `<!-- REPLACE: <case label> -->` / `<!-- REPLACE: card:<case
+  label> -->` blocks and an optional `<!-- ORDER: … -->`; `tools/pdf.py` photographs its pages too.
 - The server applies the order to the case slides (between `<!-- CASES:START` and
   `<!-- CASES:END -->` in `views/deck.html`) and to their cards on the clients slide
   (between `<!-- CARDS:START -->` and `<!-- CARDS:END -->`), and numbers the cases

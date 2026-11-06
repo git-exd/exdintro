@@ -59,6 +59,7 @@ function signSession(user) {
       industry: user.industry || '',
       cp: user.casePriorities || {},
       ch: user.caseHidden || [],
+      v: user.variant || '',
     },
     process.env.JWT_SECRET,
     { expiresIn: `${SESSION_DAYS}d` }
@@ -144,6 +145,56 @@ function reorderCaseStudies(html, priorities = {}, hidden = []) {
   return out;
 }
 
+// Alternative versions of the deck, chosen per user by the `variant` column of the sheet. A variant is a file in
+// views/variants/<name>.html holding replacement blocks, each between <!-- REPLACE: <marker> --> and
+// <!-- /REPLACE -->: the block replaces, in the deck, the case slide whose data-label is the marker, or the case card
+// whose data-target is the marker (marker "card:<label>"). <!-- ORDER: key, key, … --> sets the default order of the
+// cases in that version (keys as in CASE_NAME_TO_KEY); a user's own order in the sheet wins. Unknown or missing
+// variant → the standard deck.
+const VARIANTS_DIR = path.join(__dirname, 'views', 'variants');
+const variantCache = new Map();
+async function variantFor(name) {
+  if (!name || !/^[a-z0-9-]+$/.test(name)) return null;
+  if (variantCache.has(name)) return variantCache.get(name);
+  let variant = null;
+  try {
+    const text = await fs.readFile(path.join(VARIANTS_DIR, name + '.html'), 'utf8');
+    const order = {};
+    const om = text.match(/<!-- ORDER: ([^>]+?) -->/);
+    if (om) om[1].split(',').map((k) => k.trim()).filter(Boolean).forEach((k, i) => { order[k] = i + 1; });
+    const blocks = [...text.matchAll(/<!-- REPLACE: (.+?) -->\n?([\s\S]*?)\n?\s*<!-- \/REPLACE -->/g)].map((m) => ({ marker: m[1].trim(), html: m[2].trim() }));
+    variant = { blocks, order };
+  } catch { variant = null; }
+  variantCache.set(name, variant);
+  return variant;
+}
+
+// the order of the cases for a session: the user's own, else the default of their version
+async function casePriorities(session) {
+  if (Object.keys(session.cp || {}).length) return session.cp;
+  const v = await variantFor(session.v);
+  return (v && v.order) || {};
+}
+
+async function applyVariant(html, name) {
+  const v = await variantFor(name);
+  if (!v) return html;
+  for (const { marker, html: repl } of v.blocks) {
+    if (marker.startsWith('card:')) {
+      const target = marker.slice(5);
+      const start = html.indexOf(`<div class="cs-card`, html.indexOf('<!-- CARDS:START -->'));
+      const re = new RegExp(`<div class="cs-card[^>]*data-target="${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}">[\\s\\S]*?</div></div>`);
+      if (start >= 0) html = html.replace(re, () => repl);
+    } else {
+      const i = html.indexOf(`<section class="s-case dark" data-label="${marker}">`);
+      if (i === -1) continue;
+      const j = html.indexOf('</section>', i) + '</section>'.length;
+      html = html.slice(0, i) + repl + html.slice(j);
+    }
+  }
+  return html;
+}
+
 function verifySession(req) {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) return null;
@@ -192,7 +243,8 @@ app.get('/deck', async (req, res) => {
       ? `<span style="font-weight: 300;">the</span> ${escapeHtml(rawIndustry)} industry`
       : 'your industry';
     let html = tmpl.replaceAll('{{INDUSTRY_PHRASE}}', industryPhrase);
-    html = reorderCaseStudies(html, session.cp || {}, session.ch || []);
+    html = await applyVariant(html, session.v);
+    html = reorderCaseStudies(html, await casePriorities(session), session.ch || []);
     res.set('Cache-Control', 'no-store');
     res.type('html').send(html);
   } catch (err) {
@@ -209,15 +261,18 @@ const pdfCache = new Map();
 // A visitor with their own order of the cases (or hidden cases) gets the case pages without the number (photographed
 // for the default order) and no page of the clients grid, which would show the default cards
 const PDF_GRID_LABEL = '06 Cases · selector';
-async function deckPdf(labels, personal) {
-  const key = (personal ? 'p|' : '') + labels.join('|');
+async function deckPdf(labels, personal, variant = '') {
+  const key = variant + '|' + (personal ? 'p|' : '') + labels.join('|');
   if (pdfCache.has(key)) return pdfCache.get(key);
   const manifest = JSON.parse(await fs.readFile(path.join(PDF_DIR, 'manifest.json'), 'utf8'));
   const out = await PDFDocument.create();
   out.setTitle(manifest.title || '.exd'); out.setAuthor('.exd');
   for (const label of labels) {
     if (personal && label === PDF_GRID_LABEL) continue;
-    const files = (personal && manifest.alt && manifest.alt[label]) || manifest.pages[label] || [];
+    // the pages of an alternative version, where it has its own (pdf/manifest.json → variants)
+    const v = (variant && manifest.variants && manifest.variants[variant]) || {};
+    const files = (personal && ((v.alt && v.alt[label]) || (manifest.alt && manifest.alt[label])))
+      || (v.pages && v.pages[label]) || manifest.pages[label] || [];
     for (const file of files) {
       const src = await PDFDocument.load(await fs.readFile(path.join(PDF_DIR, 'pages', file)));
       (await out.copyPages(src, src.getPageIndices())).forEach((pg) => out.addPage(pg));
@@ -233,10 +288,10 @@ app.get('/deck.pdf', async (req, res) => {
   const session = verifySession(req);
   if (!session) return res.redirect('/');
   try {
-    const html = reorderCaseStudies(await getDeckTemplate(), session.cp || {}, session.ch || []);
+    const html = reorderCaseStudies(await getDeckTemplate(), await casePriorities(session), session.ch || []);
     const labels = [...html.matchAll(/<section [^>]*data-label="([^"]+)"/g)].map((m) => m[1]);
     const personal = Object.keys(session.cp || {}).length > 0 || (session.ch || []).length > 0;
-    const pdf = await deckPdf(labels, personal);
+    const pdf = await deckPdf(labels, personal, (await variantFor(session.v)) ? session.v : '');
     res.set('Cache-Control', 'no-store');
     res.set('Content-Disposition', 'attachment; filename="Intro .exd.pdf"');
     res.type('application/pdf').send(pdf);
