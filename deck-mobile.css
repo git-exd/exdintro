@@ -241,3 +241,13 @@ html.m-light .v2-film .wr-vis.flowv .sc-cap, html.m-light .v2-film .fs-pause { d
 }
 @media (orientation: portrait) { html.m-light .s-design .h-title .key { white-space: nowrap; } }
 @media (orientation: portrait) { html.m-light .s-design .t-fold { white-space: normal !important; display: inline !important; overflow: visible !important; } }
+
+/* portrait: the colour layers (blobs, orbs) stay with the screen while the content scrolls over them. As layers of the
+   slide they scrolled away with it, leaving a flat band under the content, and the ones pushed past the edge made
+   the slide longer. Fixed to the screen they also stop counting in the scroll; the slides that are not on screen are
+   hidden, and their layers with them */
+@media (orientation: portrait) {
+  html.m-light deck-stage > section > .blobs,
+  html.m-light deck-stage > section > .orb-stack,
+  html.m-light deck-stage > section > .orb { position: fixed !important; }
+}
